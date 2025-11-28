@@ -30,6 +30,11 @@ local conexaoClickTP = nil
 local noclipConnection = nil 
 local infiniteJumpConnection = nil
 local antiSitConnection = nil
+local HeartbeatConn = nil
+local SitChangedConn = nil
+local SeatedConn = nil
+local CharAddedConn = nil
+local DescendantAddedConn = nil
 local speedAtivo = false
 local originalWalkSpeed = 16
 local dynamicShadowsAtivo = false
@@ -904,19 +909,16 @@ local function iniciarHub()
 		end
 	end)
 	
-	antiSitToggle.MouseButton1Click:Connect(function()
+	
+antiSitToggle.MouseButton1Click:Connect(function()
 	antiSitAtivo = not antiSitAtivo
 	antiSitToggle.Text = "AntiSit " .. (antiSitAtivo and "[ON]" or "[OFF]")
 	setToggleColor(antiSitToggle, antiSitAtivo)
 
 	if antiSitAtivo then
-		local Players = game:GetService("Players")
-		local RunService = game:GetService("RunService")
-		local Workspace = game:GetService("Workspace")
+		
 		local Player = Players.LocalPlayer
-		
-		local HeartbeatConn, SitChangedConn, SeatedConn
-		
+
 		local function disableSeat(seat)
 			if seat:IsA("Seat") or seat:IsA("VehicleSeat") then
 				seat.Disabled = true
@@ -928,12 +930,13 @@ local function iniciarHub()
 			disableSeat(obj)
 		end
 		
-		Workspace.DescendantAdded:Connect(function(obj)
+		DescendantAddedConn = Workspace.DescendantAdded:Connect(function(obj)
 			task.spawn(function()
 				task.wait(0.1)
 				disableSeat(obj)
 			end)
 		end)
+		trackConnection(DescendantAddedConn)
 		
 		local function setupAntiSit(Char)
 			local Humanoid = Char:WaitForChild("Humanoid", 5)
@@ -941,45 +944,63 @@ local function iniciarHub()
 			
 			Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
 			
-			if HeartbeatConn then HeartbeatConn:Disconnect() end
-			if SitChangedConn then SitChangedConn:Disconnect() end
-			if SeatedConn then SeatedConn:Disconnect() end
+			if HeartbeatConn then safeDisconnect(HeartbeatConn) end
+			if SitChangedConn then safeDisconnect(SitChangedConn) end
+			if SeatedConn then safeDisconnect(SeatedConn) end
 			
 			HeartbeatConn = RunService.Heartbeat:Connect(function()
 				if Humanoid.Parent and Humanoid.Sit then
 					Humanoid.Sit = false
 				end
 			end)
+			trackConnection(HeartbeatConn)
 			
 			SitChangedConn = Humanoid:GetPropertyChangedSignal("Sit"):Connect(function()
 				if Humanoid.Sit then
 					Humanoid.Sit = false
 				end
 			end)
+			trackConnection(SitChangedConn)
 			
 			SeatedConn = Humanoid.Seated:Connect(function(active)
 				if active then
 					Humanoid.Sit = false
 				end
 			end)
+			trackConnection(SeatedConn)
 		end
 		
 		if Player.Character then
 			setupAntiSit(Player.Character)
 		end
 		
-		Player.CharacterAdded:Connect(setupAntiSit)
+		CharAddedConn = Player.CharacterAdded:Connect(setupAntiSit)
+		trackConnection(CharAddedConn)
 		
 	else
-		if HeartbeatConn then HeartbeatConn:Disconnect() HeartbeatConn = nil end
-		if SitChangedConn then SitChangedConn:Disconnect() SitChangedConn = nil end
-		if SeatedConn then SeatedConn:Disconnect() SeatedConn = nil end
+		-- Desconexão e Reversão do AntiSit
 		
-		local char = Player.Character or Player.CharacterAdded:Wait()
-		local hum = char:FindFirstChildOfClass("Humanoid")
+		-- Desconecta todas as conexões do AntiSit
+		if HeartbeatConn then safeDisconnect(HeartbeatConn) HeartbeatConn = nil end
+		if SitChangedConn then safeDisconnect(SitChangedConn) SitChangedConn = nil end
+		if SeatedConn then safeDisconnect(SeatedConn) SeatedConn = nil end
+		if CharAddedConn then safeDisconnect(CharAddedConn) CharAddedConn = nil end
+		if DescendantAddedConn then safeDisconnect(DescendantAddedConn) DescendantAddedConn = nil end
+
+		-- Reativa o estado 'Seated' no Humanoid
+		local char = Players.LocalPlayer.Character
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
 		if hum then
 			hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
 		end
+		
+		-- Tenta reativar a colisão e estado Disabled dos assentos no Workspace
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("Seat") or obj:IsA("VehicleSeat") then
+                obj.Disabled = false
+                obj.CanTouch = true
+            end
+        end
 	end
 end)
 
