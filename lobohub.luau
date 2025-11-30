@@ -1,3 +1,4 @@
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TextService = game:GetService("TextService")
@@ -93,14 +94,13 @@ local function iniciarHub()
 	loboHubGui.Parent = playerGui
 	trackGui(loboHubGui)
 
-	local toggleBotao = Instance.new("ImageButton") -- Alterado de TextButton
+	local toggleBotao = Instance.new("ImageButton")
 	toggleBotao.Name = "ToggleBotao"
-	toggleBotao.Image = "rbxassetid://9163518958" -- ID da imagem fornecida
-	toggleBotao.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Mantém a cor de fundo
+	toggleBotao.Image = "rbxassetid://9163518958" -- ID da imagem do toggle
+	toggleBotao.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	toggleBotao.Size = UDim2.new(0, 50, 0, 50)
 	toggleBotao.Position = UDim2.new(0, 10, 0.5, -25)
 	toggleBotao.Draggable = true
-	-- As propriedades de Texto (Font, Text, TextColor, TextScaled) foram removidas
 	toggleBotao.Parent = loboHubGui
 	trackGui(toggleBotao)
 
@@ -1437,177 +1437,28 @@ end)
 		end
 	end)
 
-	sofaButton.MouseButton1Click:Connect(function()
-		local targetPos = Vector3.new(-83, 18, -131)
-		local Players = game:GetService("Players")
-		local RunService = game:GetService("RunService")
-		local player = Players.LocalPlayer
+sofaButton.MouseButton1Click:Connect(function()
+	local args = {
+		[1] = "PickingTools",
+		[2] = "Couch"
+	}
 
-		local function getCharacter()
-			while true do
-				if player.Character and player.Character:FindFirstChild("Humanoid") and player.Character:FindFirstChild("HumanoidRootPart") then
-					return player.Character
-				end
-				task.wait()
-			end
-		end
-
-		local character = getCharacter()
-		local hum = character:WaitForChild("Humanoid")
-		local root = character:WaitForChild("HumanoidRootPart")
-
-		local savedCFrame = root.CFrame 
-		
-		local gui = Instance.new("ScreenGui")
-		gui.Name = "AvisoScript"
-		gui.ResetOnSpawn = false
-		gui.Parent = player:WaitForChild("PlayerGui")
-		trackGui(gui)
-
-		local frame = Instance.new("Frame")
-		frame.Parent = gui
-		frame.Size = UDim2.new(1, 0, 0, 60)
-		frame.Position = UDim2.new(0, 0, 0, 0)
-		frame.BackgroundColor3 = Color3.new(0,0,0)
-		frame.BackgroundTransparency = 0.3
-		frame.ZIndex = 5
-
-		local label = Instance.new("TextLabel")
-		label.Parent = frame
-		label.Size = UDim2.new(1, 0, 1, 0)
-		label.BackgroundTransparency = 1
-		label.Text = "AGUARDE!"
-		label.TextColor3 = Color3.new(1,0,0)
-		label.TextScaled = true
-		label.Font = Enum.Font.GothamBold
-		label.ZIndex = 6
-
-		local jumping = true
-		local seated = false
-		local stopped = false
-		local seatedInTime = false 
-		
-		local sitConnection 
-
-		local function forceJumpLoop(humanoid)
-			task.spawn(function()
-				while jumping and humanoid and humanoid.Parent and not stopped do
-					if humanoid.Health > 0 then
-						pcall(function()
-							humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-						end)
-					end
-					task.wait(0.12)
-				end
-			end)
-		end
-
-		jumping = true
-		forceJumpLoop(hum)
-
-		task.wait(0.15)
-		if root and root.Parent then
-			root.CFrame = CFrame.new(targetPos)
-		end
-
-		task.delay(1.0, function()
-			if stopped then return end
-			if not seated then
-				seatedInTime = false
-				hum.Health = 0
-			end
-		end)
-
-		local function showRetryMessage()
-			local retryGui = Instance.new("ScreenGui")
-			retryGui.Name = "RetryBox"
-			retryGui.ResetOnSpawn = false
-			retryGui.Parent = player:WaitForChild("PlayerGui")
-			trackGui(retryGui)
-
-			local box = Instance.new("Frame")
-			box.Parent = retryGui
-			box.Size = UDim2.new(0.4, 0, 0.25, 0)
-			box.Position = UDim2.new(0.3, 0, 0.35, 0)
-			box.BackgroundColor3 = Color3.new(0,0,0)
-			box.BackgroundTransparency = 0.2
-
-			local corner = Instance.new("UICorner")
-			corner.CornerRadius = UDim.new(0, 12)
-			corner.Parent = box
-			
-			local msg = Instance.new("TextLabel")
-			msg.Parent = box
-			msg.Size = UDim2.new(1,0,0.6,0)
-			msg.Position = UDim2.new(0,0,0,0)
-			msg.BackgroundTransparency = 1
-			msg.Font = Enum.Font.GothamBold
-			msg.TextScaled = true
-			msg.TextColor3 = Color3.new(1,1,1)
-			msg.Text = "Tente novamente"
-
-			local button = Instance.new("TextButton")
-			button.Parent = box
-			button.Size = UDim2.new(1,0,0.4,0)
-			button.Position = UDim2.new(0,0,0.6,0)
-			button.BackgroundColor3 = Color3.fromRGB(50,50,50)
-			button.Font = Enum.Font.GothamBold
-			button.TextScaled = true
-			button.TextColor3 = Color3.new(1,1,1)
-			button.Text = "OK"
-			
-			local btnCorner = Instance.new("UICorner")
-			btnCorner.CornerRadius = UDim.new(0, 8)
-			btnCorner.Parent = button
-
-			button.MouseButton1Click:Connect(function()
-				retryGui:Destroy()
-				local char = player.Character
-				if char then
-					local hrp = char:FindFirstChild("HumanoidRootPart")
-					if hrp then
-						hrp.CFrame = savedCFrame
-					end
-				end
-			end)
-		end
-
-		hum.Died:Connect(function()
-			if sitConnection then sitConnection:Disconnect() end
-			if not seated then
-				stopped = true
-				jumping = false
-				if gui and gui.Parent then gui:Destroy() end
-
-				player.CharacterAdded:Wait()
-				task.wait(0.2)
-
-				showRetryMessage()
-			else
-				stopped = true
-				jumping = false
-				if gui and gui.Parent then gui:Destroy() end
-			end
-		end)
-
-		sitConnection = hum:GetPropertyChangedSignal("Sit"):Connect(function()
-			if hum.Sit == true then
-				seated = true
-				seatedInTime = true
-			else
-				if seated == true and seatedInTime then
-					stopped = true
-					jumping = false
-					if sitConnection then sitConnection:Disconnect() end
-					task.wait(0.08)
-					pcall(function()
-						root.CFrame = savedCFrame
-					end)
-					if gui and gui.Parent then gui:Destroy() end
-				end
-			end
-		end)
+	-- Chama a função do servidor para pegar o item diretamente
+	local success, result = pcall(function()
+		return game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
 	end)
+
+	if success and result then
+		-- A RE:InvokeServer normalmente retorna algo se deu certo ou nil se não implementado
+		showRedMessage("Script 'Get Couch' executado com sucesso!", 2)
+	elseif not success then
+		-- Se InvokeServer falhar (ex: erro no servidor ou não existe)
+		showRedMessage("ERRO ao executar 'Get Couch': Falha no InvokeServer.", 3)
+	else
+		-- Se InvokeServer existir mas retornar algo que sugira falha na lógica do servidor
+		showRedMessage("Script 'Get Couch' executado, mas resultado indefinido.", 3)
+	end
+end)
 
 	killPlayerButton.MouseButton1Click:Connect(function()
 		if not jogadorSelecionado then 
@@ -1665,7 +1516,7 @@ end)
 			btn.MouseButton1Click:Connect(function()
 				gui:Destroy()
 				
-				local targetPos = Vector3.new(-83, 18, -131)
+				local targetPos = Vector3.new(-83, 13, -131)
 				local hum = char:FindFirstChild("Humanoid")
 				local root = char:FindFirstChild("HumanoidRootPart")
 				if not hum or not root then return end
