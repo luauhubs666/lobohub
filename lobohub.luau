@@ -93,16 +93,14 @@ local function iniciarHub()
 	loboHubGui.Parent = playerGui
 	trackGui(loboHubGui)
 
-	local toggleBotao = Instance.new("TextButton")
+	local toggleBotao = Instance.new("ImageButton") -- Alterado de TextButton
 	toggleBotao.Name = "ToggleBotao"
-	toggleBotao.Text = "🐺"
-	toggleBotao.TextColor3 = Color3.fromRGB(255, 255, 255)
-	toggleBotao.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	toggleBotao.Image = "rbxassetid://9163518958" -- ID da imagem fornecida
+	toggleBotao.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Mantém a cor de fundo
 	toggleBotao.Size = UDim2.new(0, 50, 0, 50)
 	toggleBotao.Position = UDim2.new(0, 10, 0.5, -25)
 	toggleBotao.Draggable = true
-	toggleBotao.Font = Enum.Font.SourceSansBold
-	toggleBotao.TextScaled = true
+	-- As propriedades de Texto (Font, Text, TextColor, TextScaled) foram removidas
 	toggleBotao.Parent = loboHubGui
 	trackGui(toggleBotao)
 
