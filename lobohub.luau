@@ -1460,192 +1460,162 @@ sofaButton.MouseButton1Click:Connect(function()
 	end
 end)
 
-	killPlayerButton.MouseButton1Click:Connect(function()
-		if not jogadorSelecionado then 
-			showRedMessage("Selecione um player primeiro!", 3)
-			return 
-		end
-		
-		local char = player.Character
-		local backpack = player.Backpack
-		if not char or not backpack then return end
-		
-		local couch = char:FindFirstChild("Couch") or backpack:FindFirstChild("Couch")
-		
-		if not couch then
-			local gui = Instance.new("ScreenGui")
-			gui.Name = "GetCouchGui"
-			gui.ResetOnSpawn = false
-			gui.Parent = playerGui
-			trackGui(gui)
-			
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0.4, 0, 0.3, 0)
-			frame.Position = UDim2.new(0.3, 0, 0.35, 0)
-			frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-			frame.BorderSizePixel = 0
-			frame.Parent = gui
-			
-			local corner = Instance.new("UICorner")
-			corner.CornerRadius = UDim.new(0, 12)
-			corner.Parent = frame
-			
-			local label = Instance.new("TextLabel")
-			label.Size = UDim2.new(1, 0, 0.6, 0)
-			label.BackgroundTransparency = 1
-			label.Text = "Pegue o sofá para matar!"
-			label.TextColor3 = Color3.fromRGB(255, 100, 100)
-			label.TextScaled = true
-			label.Font = Enum.Font.SourceSansBold
-			label.Parent = frame
-			
-			local btn = Instance.new("TextButton")
-			btn.Size = UDim2.new(0.8, 0, 0.3, 0)
-			btn.Position = UDim2.new(0.1, 0, 0.6, 0)
-			btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-			btn.Text = "PEGAR SOFÁ (EXECUTA SCRIPT)"
-			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-			btn.TextScaled = true
-			btn.Font = Enum.Font.SourceSansBold
-			btn.Parent = frame
-			
-			local btnCorner = Instance.new("UICorner")
-			btnCorner.CornerRadius = UDim.new(0, 8)
-			btnCorner.Parent = btn
-			
-			btn.MouseButton1Click:Connect(function()
-				gui:Destroy()
-				
-				local targetPos = Vector3.new(-83, 13, -131)
-				local hum = char:FindFirstChild("Humanoid")
-				local root = char:FindFirstChild("HumanoidRootPart")
-				if not hum or not root then return end
-				
-				local savedCFrame = root.CFrame
-				
-				local jumping = true
-				local stopped = false
-				local seated = false
-				local seatedInTime = false
-				
-				task.spawn(function()
-					while jumping and hum and hum.Parent and not stopped do
-						if hum.Health > 0 then
-							pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end)
-						end
-						task.wait(0.12)
-					end
-				end)
-				
-				task.wait(0.15)
-				if root and root.Parent then root.CFrame = CFrame.new(targetPos) end
-				
-				local monitorConn
-				monitorConn = hum:GetPropertyChangedSignal("Sit"):Connect(function()
-					if hum.Sit then
-						seated = true
-						seatedInTime = true
-					else
-						if seated then
-							stopped = true
-							jumping = false
-							task.wait(0.1)
-							pcall(function() root.CFrame = savedCFrame end)
-							monitorConn:Disconnect()
-						end
-					end
-				end)
-				
-				task.delay(1.5, function()
-					if not seated and not stopped then
-						stopped = true
-						jumping = false
-						if monitorConn then monitorConn:Disconnect() end
-						pcall(function() root.CFrame = savedCFrame end)
-					end
-				end)
-			end)
-			
-		else
-			local hum = char:FindFirstChild("Humanoid")
-			local root = char:FindFirstChild("HumanoidRootPart")
-			local targetChar = jogadorSelecionado.Character
-			local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
-			local targetHum = targetChar and targetChar:FindFirstChild("Humanoid")
-			
-			if not hum or not root or not targetRoot or not targetHum then 
-				showRedMessage("Erro: Alvo inválido ou você morreu.", 3)
-				return 
-			end
-			
-			hum:EquipTool(couch)
-			
-			local originalCFrame = root.CFrame
-			
-			local oldCollide = {}
-			for _, part in ipairs(char:GetDescendants()) do
-				if part:IsA("BasePart") and part.CanCollide then
-					table.insert(oldCollide, part)
-					part.CanCollide = false
-				end
-			end
-			
-			local spinVelocity = Instance.new("BodyAngularVelocity")
-			spinVelocity.Name = "LoboHubSpin"
-			spinVelocity.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-			spinVelocity.AngularVelocity = Vector3.new(0, 50, 0)
-			spinVelocity.Parent = root
-			trackBody(spinVelocity)
-			
-			task.spawn(function()
-				local timeout = 15
-				local startTime = tick()
-				local killSuccess = false
-				
-				while tick() - startTime < timeout do
-					if not targetRoot or not targetRoot.Parent or not root or not root.Parent then break end
-					
-					if targetHum.Sit then
-						killSuccess = true
-						break
-					end
-					
-					pcall(function()
-						root.CFrame = targetRoot.CFrame * CFrame.new(0, -4, 0)
-						hum:ChangeState(Enum.HumanoidStateType.Jumping)
-						root.Velocity = Vector3.new(0,0,0)
-					end)
-					
-					RunService.Heartbeat:Wait()
-				end
-				
-				if spinVelocity and spinVelocity.Parent then safeDestroy(spinVelocity) end
-				
-				if killSuccess then
-					local killPos = CFrame.new(originalCFrame.X, -450, originalCFrame.Z)
-					pcall(function() root.CFrame = killPos end)
-					task.wait(0.25) 
-					couch.Parent = backpack
-					pcall(function()
-						root.CFrame = originalCFrame
-						root.Velocity = Vector3.new(0,0,0)
-					end)
-					showRedMessage("Alvo Eliminado!", 2)
-				else
-					pcall(function()
-						root.CFrame = originalCFrame
-						root.Velocity = Vector3.new(0,0,0)
-					end)
-					couch.Parent = backpack
-					showRedMessage("Falha: Alvo não sentou a tempo.", 3)
-				end
-				
-				for _, part in ipairs(oldCollide) do
-					if part and part.Parent then part.CanCollide = true end
-				end
-			end)
-		end
-	end)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+-- Nota: Assumimos que 'showRedMessage' e 'jogadorSelecionado' já estão definidos no escopo do seu script maior.
+
+killPlayerButton.MouseButton1Click:Connect(function()
+    if not jogadorSelecionado then
+        showRedMessage("Selecione um player primeiro!", 3)
+        return
+    end
+
+    local char = player.Character
+    local backpack = player.Backpack
+    if not char or not backpack then return end
+
+    local hum = char:FindFirstChild("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local targetChar = jogadorSelecionado.Character
+    local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+    local targetHum = targetChar and targetChar:FindFirstChild("Humanoid")
+
+    if not hum or not root or not targetRoot or not targetHum then
+        showRedMessage("Erro: Personagem inválido.", 3)
+        return
+    end
+
+    local savedCFrame = root.CFrame
+
+    -- Pose rígida
+    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+    hum.PlatformStand = true
+
+    -- Baseplate principal de segurança em -195
+    local safetyPlate = Instance.new("Part")
+    safetyPlate.Size = Vector3.new(300, 1, 300)
+    safetyPlate.Anchored = true
+    safetyPlate.CanCollide = true
+    safetyPlate.Transparency = 1
+    safetyPlate.CFrame = CFrame.new(0, -195, 0)
+    safetyPlate.Parent = workspace
+
+    -- NOVA BASEPLATE EM -250 (garantia extra, colidível só com você)
+    local extraSafetyPlate = Instance.new("Part")
+    extraSafetyPlate.Size = Vector3.new(500, 1, 500)  -- Maior pra pegar tudo
+    extraSafetyPlate.Anchored = true
+    extraSafetyPlate.CanCollide = true
+    extraSafetyPlate.Transparency = 1
+    extraSafetyPlate.CFrame = CFrame.new(0, -250, 0)
+    extraSafetyPlate.Parent = workspace
+
+    -- Pega e equipa Couch
+    local function getAndEquipCouch()
+        local couch = char:FindFirstChild("Couch") or backpack:FindFirstChild("Couch")
+        if couch then hum:EquipTool(couch); return couch end
+        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+        repeat task.wait()
+            couch = char:FindFirstChild("Couch") or backpack:FindFirstChild("Couch")
+        until couch or not char.Parent
+        if couch then hum:EquipTool(couch) end
+        return couch
+    end
+
+    local couch = getAndEquipCouch()
+    if not couch then
+        safetyPlate:Destroy()
+        extraSafetyPlate:Destroy()
+        hum.PlatformStand = false
+        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+        showRedMessage("Falha ao pegar Couch.", 3)
+        return
+    end
+
+    local RunService = game:GetService("RunService")
+    local spinConn = RunService.Heartbeat:Connect(function(dt)
+        if root and root.Parent then
+            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000) * dt, 0)
+        end
+    end)
+
+    -- Garantia: se passar de -250 por bug, teleporte de volta
+    local fallbackConn = RunService.Heartbeat:Connect(function()
+        if root.Position.Y <= -250 then
+            root.CFrame = savedCFrame
+            root.Velocity = Vector3.new(0,0,0)
+        end
+    end)
+
+    while task.wait() do
+        if not targetRoot.Parent or not targetHum.Parent then break end
+
+        root.CFrame = targetRoot.CFrame * CFrame.new(1, -4, 0)
+        root.Velocity = Vector3.new(0,0,0)
+
+        if targetHum.Sit then
+            spinConn:Disconnect()
+
+            -- VAI PRO VOID
+            root.CFrame = CFrame.new(root.Position.X, -200, root.Position.Z)
+            root.Velocity = Vector3.new(0,0,0)
+
+            -- FICA UM POUCO MAIS NO VOID (0.5s extra antes de soltar)
+            task.wait(0.5)
+
+            -- SOLTA O COUCH (para de segurar)
+            hum:UnequipTools()
+
+            -- TELEPORTA IMEDIATAMENTE DE VOLTA (zero delay depois de soltar)
+            root.CFrame = savedCFrame
+            showRedMessage("Alvo Eliminado!", 2)
+
+            -- DELETA O COUCH LOGO DEPOIS (pra matar o alvo)
+            task.spawn(function()
+                task.wait(0.05)  -- Mini delay pra ver caindo
+                pcall(function()
+                    local args = { "PlayerWantsToDeleteTool", "Couch" }
+                    game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+                end)
+                for _, obj in {char, backpack, player:FindFirstChild("StarterGear")} do
+                    if obj then
+                        local t = obj:FindFirstChild("Couch")
+                        if t then t:Destroy() end
+                    end
+                end
+            end)
+
+            -- ESPERA O ALVO CAIR NO VOID (pra confirmar kill)
+            repeat task.wait(0.1)
+            until not targetRoot.Parent or targetRoot.Position.Y <= -250
+
+            break
+        end
+    end
+
+    -- Desliga garantia
+    fallbackConn:Disconnect()
+
+    -- Restaura tudo
+    hum.PlatformStand = false
+    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+    hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true)
+
+    if safetyPlate and safetyPlate.Parent then
+        safetyPlate:Destroy()
+    end
+    if extraSafetyPlate and extraSafetyPlate.Parent then
+        extraSafetyPlate:Destroy()
+    end
+end)
 
 	local function killAllHub()
 		hubVisivel = false
