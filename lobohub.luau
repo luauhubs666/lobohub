@@ -482,7 +482,7 @@ local function iniciarHub()
 	local tpBackButton = makeFuncButton(pageFuncoes, "↩️ Voltar Posição")
 	local viewPlayerButton = makeFuncButton(pageFuncoes, "👁️ View Player [OFF]")
 	local killPlayerButton = makeFuncButton(pageFuncoes, "🔪 Kill Player", Color3.fromRGB(180,40,40))
-
+    local killAllButton = makeFuncButton(pageFuncoes, "🔥 Kill All", Color3.fromRGB(0, 0, 0))
 	local debugToggle = Instance.new("TextButton")
 	debugToggle.Name = "DebugToggle"
 	debugToggle.Size = UDim2.new(1, -10, 0, 40) -- Ajuste de layout
@@ -1465,6 +1465,134 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- Nota: Assumimos que 'showRedMessage' e 'jogadorSelecionado' já estão definidos no escopo do seu script maior.
+
+killAllButton.MouseButton1Click:Connect(function()
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hum = char:WaitForChild("Humanoid")
+    local root = char:WaitForChild("HumanoidRootPart")
+    local RunService = game:GetService("RunService")
+
+    local savedCFrame = root.CFrame
+
+    -- Imortalidade total
+    hum.PlatformStand = true
+    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+        if state ~= Enum.HumanoidStateType.None then
+            hum:SetStateEnabled(state, false)
+        end
+    end
+
+    -- Baseplates de segurança
+    local p1 = Instance.new("Part", workspace)
+    p1.Size = Vector3.new(800,1,800); p1.Anchored = true; p1.CanCollide = true
+    p1.Transparency = 1; p1.CFrame = CFrame.new(0,-195,0)
+
+    local p2 = Instance.new("Part", workspace)
+    p2.Size = Vector3.new(1200,1,1200); p2.Anchored = true; p2.CanCollide = true
+    p2.Transparency = 1; p2.CFrame = CFrame.new(0,-250,0)
+
+    -- Nunca morre
+    local neverDie = RunService.Heartbeat:Connect(function()
+        if root.Position.Y <= -245 then
+            root.CFrame = savedCFrame
+            root.Velocity = Vector3.zero
+        end
+    end)
+
+    -- Giro insano
+    local spin = RunService.Heartbeat:Connect(function(dt)
+        root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)
+    end)
+
+    -- Função pra pegar Couch novo
+    local function equipCouch()
+        local tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+        if not tool then
+            game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer("PickingTools", "Couch")
+            repeat task.wait()
+                tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+            until tool
+        end
+        hum:EquipTool(tool)
+        task.wait(0.1)
+    end
+
+    -- Primeiro Couch
+    equipCouch()
+
+    -- Coleta alvos vivos e de pé
+    local targets = {}
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local tHum = plr.Character.Humanoid
+            if tHum.Health > 0 and not tHum.Sit then
+                table.insert(targets, plr)
+            end
+        end
+    end
+
+    showRedMessage("MASSACRE INICIADO • "..#targets.." ALVOS", 4)
+
+    -- MATA TODOS (exatamente como você gosta)
+    for i, plr in ipairs(targets) do
+        local tChar = plr.Character
+        if not tChar or not tChar:FindFirstChild("HumanoidRootPart") then continue end
+        local tRoot = tChar.HumanoidRootPart
+        local tHum = tChar.Humanoid
+
+        if tHum.Health <= 0 or tHum.Sit then continue end
+
+        -- Couch novo pra cada vítima
+        equipCouch()
+
+        -- Persegue até sentar
+        repeat
+            if not tRoot.Parent then break end
+            root.CFrame = tRoot.CFrame * CFrame.new(1, -4, 0)
+            root.Velocity = Vector3.zero
+            task.wait()
+        until tHum.Sit or tHum.Health <= 0 or not tRoot.Parent
+
+        if tHum.Sit and tRoot.Parent then
+            root.CFrame = CFrame.new(root.Position.X, -200, root.Position.Z)
+            task.wait(0.5)           -- segurando o sofá
+            hum:UnequipTools()       -- solta
+            task.wait(0.2)           -- total 0.7s no void
+            root.CFrame = savedCFrame -- volta
+
+            -- Deleta o Couch (mata o alvo)
+            task.spawn(function()
+                task.wait(0.1)
+                pcall(function()
+                    game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer("PlayerWantsToDeleteTool", "Couch")
+                end)
+                for _, obj in {char, player.Backpack, player:FindFirstChild("StarterGear")} do
+                    if obj then
+                        local c = obj:FindFirstChild("Couch")
+                        if c then c:Destroy() end
+                    end
+                end
+            end)
+
+            task.wait(0.3) -- delay suave entre kills (evita lag e falhas)
+        end
+    end
+
+    -- Limpeza final
+    spin:Disconnect()
+    neverDie:Disconnect()
+    hum.PlatformStand = false
+    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+        if state ~= Enum.HumanoidStateType.None then
+            hum:SetStateEnabled(state, true)
+        end
+    end
+    p1:Destroy()
+    p2:Destroy()
+
+    showRedMessage("SERVIDOR ANIQUILADO • "..#targets.." MORTOS", 6)
+end)
 
 killPlayerButton.MouseButton1Click:Connect(function()
     if not jogadorSelecionado then
