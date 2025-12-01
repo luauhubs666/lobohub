@@ -1472,10 +1472,7 @@ killPlayerButton.MouseButton1Click:Connect(function()
         return
     end
 
-    local char = player.Character
-    local backpack = player.Backpack
-    if not char or not backpack then return end
-
+    local char = player.Character or player.CharacterAdded:Wait()
     local hum = char:FindFirstChild("Humanoid")
     local root = char:FindFirstChild("HumanoidRootPart")
     local targetChar = jogadorSelecionado.Character
@@ -1489,100 +1486,85 @@ killPlayerButton.MouseButton1Click:Connect(function()
 
     local savedCFrame = root.CFrame
 
-    -- Pose rígida
-    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-    hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
-    hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
-    hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+    -- Pose rígida total
     hum.PlatformStand = true
-
-    -- Baseplate principal de segurança em -195
-    local safetyPlate = Instance.new("Part")
-    safetyPlate.Size = Vector3.new(300, 1, 300)
-    safetyPlate.Anchored = true
-    safetyPlate.CanCollide = true
-    safetyPlate.Transparency = 1
-    safetyPlate.CFrame = CFrame.new(0, -195, 0)
-    safetyPlate.Parent = workspace
-
-    -- NOVA BASEPLATE EM -250 (garantia extra, colidível só com você)
-    local extraSafetyPlate = Instance.new("Part")
-    extraSafetyPlate.Size = Vector3.new(500, 1, 500)  -- Maior pra pegar tudo
-    extraSafetyPlate.Anchored = true
-    extraSafetyPlate.CanCollide = true
-    extraSafetyPlate.Transparency = 1
-    extraSafetyPlate.CFrame = CFrame.new(0, -250, 0)
-    extraSafetyPlate.Parent = workspace
-
-    -- Pega e equipa Couch
-    local function getAndEquipCouch()
-        local couch = char:FindFirstChild("Couch") or backpack:FindFirstChild("Couch")
-        if couch then hum:EquipTool(couch); return couch end
-        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
-        repeat task.wait()
-            couch = char:FindFirstChild("Couch") or backpack:FindFirstChild("Couch")
-        until couch or not char.Parent
-        if couch then hum:EquipTool(couch) end
-        return couch
-    end
-
-    local couch = getAndEquipCouch()
-    if not couch then
-        safetyPlate:Destroy()
-        extraSafetyPlate:Destroy()
-        hum.PlatformStand = false
-        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-        showRedMessage("Falha ao pegar Couch.", 3)
-        return
-    end
-
-    local RunService = game:GetService("RunService")
-    local spinConn = RunService.Heartbeat:Connect(function(dt)
-        if root and root.Parent then
-            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000) * dt, 0)
+    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+        if state ~= Enum.HumanoidStateType.None then
+            hum:SetStateEnabled(state, false)
         end
-    end)
+    end
 
-    -- Garantia: se passar de -250 por bug, teleporte de volta
-    local fallbackConn = RunService.Heartbeat:Connect(function()
-        if root.Position.Y <= -250 then
+    -- Baseplates de segurança (duas camadas)
+    local plate1 = Instance.new("Part")
+    plate1.Size = Vector3.new(400, 1, 400)
+    plate1.Anchored = true
+    plate1.CanCollide = true
+    plate1.Transparency = 1
+    plate1.CFrame = CFrame.new(0, -195, 0)
+    plate1.Parent = workspace
+
+    local plate2 = Instance.new("Part")
+    plate2.Size = Vector3.new(600, 1, 600)
+    plate2.Anchored = true
+    plate2.CanCollide = true
+    plate2.Transparency = 1
+    plate2.CFrame = CFrame.new(0, -250, 0)
+    plate2.Parent = workspace
+
+    -- Garante que você nunca passe de -250
+    local neverDie = game:GetService("RunService").Heartbeat:Connect(function()
+        if root.Position.Y <= -248 then
             root.CFrame = savedCFrame
             root.Velocity = Vector3.new(0,0,0)
         end
     end)
 
+    -- Pega o Couch
+    local couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+    if not couchTool then
+        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+        repeat task.wait() couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+        until couchTool
+    end
+    hum:EquipTool(couchTool)
+
+    -- Giro enquanto espera sentar
+    local spin = game:GetService("RunService").Heartbeat:Connect(function(dt)
+        root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)
+    end)
+
+    -- Espera o alvo sentar
     while task.wait() do
         if not targetRoot.Parent or not targetHum.Parent then break end
-
         root.CFrame = targetRoot.CFrame * CFrame.new(1, -4, 0)
         root.Velocity = Vector3.new(0,0,0)
 
         if targetHum.Sit then
-            spinConn:Disconnect()
+            spin:Disconnect()
 
             -- VAI PRO VOID
             root.CFrame = CFrame.new(root.Position.X, -200, root.Position.Z)
             root.Velocity = Vector3.new(0,0,0)
 
-            -- FICA UM POUCO MAIS NO VOID (0.5s extra antes de soltar)
+            -- 0,5s segurando o Couch no void
             task.wait(0.5)
 
-            -- SOLTA O COUCH (para de segurar)
+            -- SOLTA O COUCH (você vê caindo)
             hum:UnequipTools()
 
-            -- TELEPORTA IMEDIATAMENTE DE VOLTA (zero delay depois de soltar)
+            -- +0,2s → total 0,7s no void → VOLTA IMEDIATAMENTE
+            task.wait(0.2)
             root.CFrame = savedCFrame
             showRedMessage("Alvo Eliminado!", 2)
 
-            -- DELETA O COUCH LOGO DEPOIS (pra matar o alvo)
+            -- SÓ AGORA deleta o Couch (você já voltou, alvo cai 100%)
             task.spawn(function()
-                task.wait(0.05)  -- Mini delay pra ver caindo
+                task.wait(0.1)
                 pcall(function()
-                    local args = { "PlayerWantsToDeleteTool", "Couch" }
+                    local args = {"PlayerWantsToDeleteTool", "Couch"}
                     game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
                 end)
-                for _, obj in {char, backpack, player:FindFirstChild("StarterGear")} do
+                for _, obj in {char, player.Backpack, player:FindFirstChild("StarterGear")} do
                     if obj then
                         local t = obj:FindFirstChild("Couch")
                         if t then t:Destroy() end
@@ -1590,31 +1572,20 @@ killPlayerButton.MouseButton1Click:Connect(function()
                 end
             end)
 
-            -- ESPERA O ALVO CAIR NO VOID (pra confirmar kill)
-            repeat task.wait(0.1)
-            until not targetRoot.Parent or targetRoot.Position.Y <= -250
-
             break
         end
     end
 
-    -- Desliga garantia
-    fallbackConn:Disconnect()
-
-    -- Restaura tudo
+    -- Limpeza final
+    neverDie:Disconnect()
     hum.PlatformStand = false
-    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
-    hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
-    hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-    hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true)
-
-    if safetyPlate and safetyPlate.Parent then
-        safetyPlate:Destroy()
+    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+        if state ~= Enum.HumanoidStateType.None then
+            hum:SetStateEnabled(state, true)
+        end
     end
-    if extraSafetyPlate and extraSafetyPlate.Parent then
-        extraSafetyPlate:Destroy()
-    end
+    if plate1 and plate1.Parent then plate1:Destroy() end
+    if plate2 and plate2.Parent then plate2:Destroy() end
 end)
 
 	local function killAllHub()
