@@ -312,13 +312,18 @@ tabCorner.Parent = tabContainer
 	pageParaMimLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	pageParaMimLayout.Parent = pageParaMim
 
-	local pageFuncoes = Instance.new("Frame")
+	local pageFuncoes =
+ Instance.new("ScrollingFrame")
 	pageFuncoes.Name = "Page_Funcoes"
 	pageFuncoes.Size = UDim2.new(1, 0, 1, 0)
 	pageFuncoes.BackgroundTransparency = 1
 	pageFuncoes.Visible = false
 	pageFuncoes.Parent = pageContainer
 	trackGui(pageFuncoes)
+	
+		pageFuncoes.CanvasSize = UDim2.new(0, 0, 2, 0) -- '2' significa 200% da altura do Frame. Você pode ajustar este valor.
+	pageFuncoes.ScrollBarThickness = 6 -- Ajuste fino
+	pageFuncoes.Active = true -- Garante que aceita cliques
 
 	local pageFuncoesLayout = Instance.new("UIListLayout")
 	pageFuncoesLayout.Padding = UDim.new(0, 8)
