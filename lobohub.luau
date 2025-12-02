@@ -298,6 +298,7 @@ tabCorner.Parent = tabContainer
 	discordButton.Parent = pageBemVindo
 	trackGui(discordButton)
 
+    -- Página Para Mim
 	local pageParaMim = Instance.new("Frame")
 	pageParaMim.Name = "Page_ParaMim"
 	pageParaMim.Size = UDim2.new(1, 0, 1, 0)
@@ -337,7 +338,7 @@ tabCorner.Parent = tabContainer
 	pageClientLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	pageClientLayout.Parent = pageClient
 	
-	-- INÍCIO DA ABA PROTEÇÕES (CORRETO)
+	-- Página proteções
 	local pageProtecoes = Instance.new("Frame")
 	pageProtecoes.Name = "Page_Protecoes"
 	pageProtecoes.Size = UDim2.new(1, 0, 1, 0)
@@ -350,9 +351,8 @@ tabCorner.Parent = tabContainer
 	pageProtecoesLayout.Padding = UDim.new(0, 8)
 	pageProtecoesLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	pageProtecoesLayout.Parent = pageProtecoes
-	-- FIM DA ABA PROTEÇÕES
-
-
+	
+    -- Página debug
 	local pageDebug = Instance.new("Frame")
 	pageDebug.Name = "Page_Debug"
 	pageDebug.Size = UDim2.new(1, 0, 1, 0)
@@ -366,8 +366,7 @@ tabCorner.Parent = tabContainer
 	pageDebugLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	pageDebugLayout.Parent = pageDebug
 	
-	-- Aba proteções 
-
+    -- Clique da aba proteções
 	tabProtecoes.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
 		pageParaMim.Visible = false
@@ -383,7 +382,7 @@ tabCorner.Parent = tabContainer
 	playerSelectButton.Size = UDim2.new(1, -10, 0, 40)
 	playerSelectButton.Text = "👥 Selecionar Jogador..."
 	playerSelectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	playerSelectButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	playerSelectButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	playerSelectButton.Font = Enum.Font.SourceSansBold
 	playerSelectButton.TextScaled = true
 	playerSelectButton.Parent = pageFuncoes
@@ -621,6 +620,7 @@ tabCorner.Parent = tabContainer
 		mainFrame.Visible = hubVisivel
 	end)
 
+    -- Clique da págia bem-vindo
 	tabBemVindo.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = true
 		pageParaMim.Visible = false
@@ -630,6 +630,7 @@ tabCorner.Parent = tabContainer
 		pageProtecoes.Visible = false
 	end)
 
+    -- Clique da página para mim
 	tabParaMim.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
 		pageParaMim.Visible = true
@@ -639,6 +640,7 @@ tabCorner.Parent = tabContainer
 		pageProtecoes.Visible = false
 	end)
 
+    -- Clique da página funções
 	tabFuncoes.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
 		pageParaMim.Visible = false
@@ -647,7 +649,8 @@ tabCorner.Parent = tabContainer
 		pageDebug.Visible = false
 		pageProtecoes.Visible = false
 	end)
-
+    
+    -- Clique da página client
 	tabClient.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
 		pageParaMim.Visible = false
@@ -656,7 +659,8 @@ tabCorner.Parent = tabContainer
 		pageDebug.Visible = false
 		pageProtecoes.Visible = false
 	end)
-
+    
+    -- Clique da página debug
 	tabDebug.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
 		pageParaMim.Visible = false
@@ -666,6 +670,7 @@ tabCorner.Parent = tabContainer
 	    pageProtecoes.Visible = false
 	end)
 	
+	-- Clique da página proteções
 	tabProtecoes.MouseButton1Click:Connect(function()
 	pageBemVindo.Visible = false
 	pageParaMim.Visible = false
@@ -675,6 +680,7 @@ tabCorner.Parent = tabContainer
 	pageProtecoes.Visible = true
 	end)
 
+    -- Informações da página bem-vindo
 	do
 		local userId = player.UserId
 		local thumbType = Enum.ThumbnailType.HeadShot
@@ -721,7 +727,7 @@ tabCorner.Parent = tabContainer
 				local target = p
 				local btn = Instance.new("TextButton")
 				btn.Size = UDim2.new(1, -10, 0, 34)
-				btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+				btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 				btn.TextColor3 = Color3.fromRGB(255,255,255)
 				btn.Font = Enum.Font.SourceSansBold
 				btn.TextScaled = false
@@ -747,7 +753,8 @@ tabCorner.Parent = tabContainer
 			end
 		end)
 	end
-
+    
+    -- Botão de selecionar player
 	playerSelectButton.MouseButton1Click:Connect(function()
 		if playerList.Visible then
 			playerList.Visible = false
@@ -781,7 +788,7 @@ tabCorner.Parent = tabContainer
 		if not char then return end
 		local highlight = Instance.new("Highlight")
 		highlight.FillTransparency = 1
-		-- *** ALTERAÇÃO 4: Cor do ESP para azul claro ***
+		-- Cor e aparência do ESP
 		highlight.OutlineColor = Color3.fromRGB(100, 200, 255)
 		highlight.OutlineTransparency = 0
 		highlight.Parent = char
@@ -800,7 +807,7 @@ tabCorner.Parent = tabContainer
 		textLabel.Text = "@" .. targetPlayer.Name    
 		textLabel.Size = UDim2.new(1, 0, 1, 0)    
 		textLabel.BackgroundTransparency = 1    
-		-- *** ALTERAÇÃO 4: Cor do texto ESP para azul claro ***
+		-- Cor do texto do ESP
 		textLabel.TextColor3 = Color3.fromRGB(100, 200, 255)    
 		textLabel.TextScaled = false
 		textLabel.TextSize = 12 
@@ -809,6 +816,7 @@ tabCorner.Parent = tabContainer
 		table.insert(espInstancias, billGui)
 	end
 
+    -- Lógica do ESP
 	espToggle.MouseButton1Click:Connect(function()
 		espAtivo = not espAtivo
 		espToggle.Text = "🌐 ESP" .. (espAtivo and " [ON]" or " [OFF]")
@@ -847,6 +855,7 @@ tabCorner.Parent = tabContainer
 		end
 	end
 
+    -- Lógica click TP
 	clickTPToggle.MouseButton1Click:Connect(function()
 		clickTpAtivo = not clickTpAtivo
 		local base = "👆 Click TP"
@@ -860,6 +869,7 @@ tabCorner.Parent = tabContainer
 		end
 	end)
 
+    -- Lógica do noclip
 	noclipToggle.MouseButton1Click:Connect(function()
 		noclipAtivo = not noclipAtivo
 		local base = "🚫 Noclip"
@@ -896,6 +906,7 @@ tabCorner.Parent = tabContainer
 		end
 	end)
 	
+	-- Lógica do infinite jump
 	infiniteJumpToggle.MouseButton1Click:Connect(function()
 		infiniteJumpAtivo = not infiniteJumpAtivo
 		infiniteJumpToggle.Text = "🦘 Pulo Infinito " .. (infiniteJumpAtivo and "[ON]" or "[OFF]")
@@ -915,7 +926,7 @@ tabCorner.Parent = tabContainer
 		end
 	end)
 	
-	
+-- Lógica do antisit	
 antiSitToggle.MouseButton1Click:Connect(function()
 	antiSitAtivo = not antiSitAtivo
 	antiSitToggle.Text = "AntiSit " .. (antiSitAtivo and "[ON]" or "[OFF]")
@@ -983,8 +994,7 @@ antiSitToggle.MouseButton1Click:Connect(function()
 		CharAddedConn = Player.CharacterAdded:Connect(setupAntiSit)
 		trackConnection(CharAddedConn)
 		
-	else
-		-- Desconexão e Reversão do AntiSit
+	else -- Desconecta e reverte o antisit
 		
 		-- Desconecta todas as conexões do AntiSit
 		if HeartbeatConn then safeDisconnect(HeartbeatConn) HeartbeatConn = nil end
@@ -1011,7 +1021,7 @@ antiSitToggle.MouseButton1Click:Connect(function()
 end)
 
 
--- Lógica do botão Fling (Modo Durão + Rotação Insana)
+-- Lógica do botão Fling
 local flingMotorConnection = nil
 local flingRotateConnection = nil
 local flingAnimationConnection = nil
@@ -1029,10 +1039,7 @@ local function startFlingMode()
 		return
 	end
 
-	----------------------------------------------------------------
-	-- MODO DURÃO (sem animação, sem mexer membros)
-	----------------------------------------------------------------
-
+	-- Desativar animações do humanoid
 	-- Mata animações atuais
 	for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
 		track:Stop()
@@ -1046,8 +1053,8 @@ local function startFlingMode()
 	end)
 	trackConnection(flingAnimationConnection)
 
-	-- Mantém boneco vivo
-	hum.AutoRotate = false  -- ⚠️ DESATIVADO pra não lutar com o tornado
+	-- Mantém  o humanoid vivo
+	hum.AutoRotate = false  -- Desativa auto rotação padrão do roblox
 	hum:ChangeState(Enum.HumanoidStateType.Running)
 
 	-- Travar Motor6Ds
@@ -1066,15 +1073,13 @@ local function startFlingMode()
 	end)
 	trackConnection(flingMotorConnection)
 
-	----------------------------------------------------------------
-	-- ROTAÇÃO INFINITA (Anti-walk cancel)
-	----------------------------------------------------------------
+-- Rotação infinita rápida fling
 
 	if flingRotateConnection then safeDisconnect(flingRotateConnection) end
 	flingRotateConnection = RunService.RenderStepped:Connect(function(dt)
 		if root and root.Parent then
 			
-			-- Roblox tenta rotacionar? A gente destrói a tentativa:
+			-- Roblox tenta rotacionar?  Eu destruo a tentativa
 			root.CFrame = CFrame.new(root.Position) * 
 				root.CFrame.Rotation * 
 				CFrame.Angles(0, math.rad(300), 0)
@@ -1083,9 +1088,8 @@ local function startFlingMode()
 	end)
 	trackConnection(flingRotateConnection)
 
-	----------------------------------------------------------------
 
-	showRedMessage("👺 Modo Durão + Tornado Ativado", 2)
+	showRedMessage("Fling ativado!", 2)
 end
 
 
@@ -1101,11 +1105,11 @@ local function stopFlingMode()
 		hum:ChangeState(Enum.HumanoidStateType.Running)
 	end
 
-	showRedMessage("Modo Durão/Tornado Desligado.", 2)
+	showRedMessage("Fling desativado!", 2)
 end
 
 
--- Botão
+-- Lógica do botão fling
 flingBodyToggle.MouseButton1Click:Connect(function()
 	flingBodyAtivo = not flingBodyAtivo
 	local base = "👺 Fling"
@@ -1121,7 +1125,6 @@ flingBodyToggle.MouseButton1Click:Connect(function()
 end)
 
 
-	-- *** ALTERAÇÃO 3: Logic update - apply on text change/focus lost instantly ***
 	speedValueBox:GetPropertyChangedSignal("Text"):Connect(function()
 		applySpeedValue()
 	end)
@@ -1149,11 +1152,11 @@ end)
 		local hum = char:FindFirstChildOfClass("Humanoid")
 		if hum then
 			originalWalkSpeed = hum.WalkSpeed
-			applySpeedValue() -- Always try to apply if text is there
+			applySpeedValue() -- Aplicar valor de velocidade
 		end
 	end)
 
-	dynamicShadowsToggle.Text = "💡 Sombras [ON]"
+	dynamicShadowsToggle.Text = "Sombras [ON]"
 	setToggleColor(dynamicShadowsToggle, false)
 
 	dynamicShadowsToggle.MouseButton1Click:Connect(function()
@@ -1167,9 +1170,9 @@ end)
 					obj.CastShadow = false
 				end
 			end
-			dynamicShadowsToggle.Text = "💡 Sombras [REMOVIDAS]"
+			dynamicShadowsToggle.Text = "Sombras [OFF]"
 			setToggleColor(dynamicShadowsToggle, true)
-			showRedMessage("Sombras removidas (RTX Off!)", 2)
+			showRedMessage("Streaming shadows off", 2)
 		else
 			local Lighting = game:GetService("Lighting")
 			Lighting.GlobalShadows = true
@@ -1178,9 +1181,9 @@ end)
 					obj.CastShadow = true
 				end
 			end
-			dynamicShadowsToggle.Text = "💡 Sombras [NORMAL]"
+			dynamicShadowsToggle.Text = "Sombras [ON]"
 			setToggleColor(dynamicShadowsToggle, false)
-			showRedMessage("Sombras restauradas!", 2)
+			showRedMessage("Streaming shadows on", 2)
 		end
 	end)
 
@@ -1196,6 +1199,7 @@ end)
 		return v
 	end
 
+    -- Iniciar voo
 	local function startFlight()
 		if flying then return end
 		local char = player.Character
@@ -1203,11 +1207,11 @@ end)
 		local hrp = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
 		local humanoid = char:FindFirstChildOfClass("Humanoid")
 		if not hrp or not humanoid then
-			showRedMessage("Seu personagem não está pronto para voar.", 3)
+			showRedMessage("Impossível voar.", 3)
 			return
 		end
 	   
-		-- *** ALTERAÇÃO 2: Limpar forças anteriores e usar força massiva ***
+      -- Limpar forças anteriores
 		for _, v in pairs(hrp:GetChildren()) do
 			if v:IsA("BodyVelocity") or v:IsA("BodyGyro") or v:IsA("BodyPosition") then
 				v:Destroy()
@@ -1267,6 +1271,7 @@ end)
 		trackConnection(flightRenderConn)
 	end
 
+    -- Parar de voar
 	local function stopFlight()
 		if not flying then return end
 		flying = false
@@ -1289,29 +1294,29 @@ end)
 	flightToggle.MouseButton1Click:Connect(function()
 		if flying then
 			stopFlight()
-			flightToggle.Text = "✈️ Voo [OFF]"
+			flightToggle.Text = "🕊 Voo [OFF]"
 			setToggleColor(flightToggle, false)
 		else
 			startFlight()
-			flightToggle.Text = "✈️ Voo [ON]"
+			flightToggle.Text = "🕊 Voo [ON]"
 			setToggleColor(flightToggle, true)
 		end
 	end)
 
 	tpToPlayerButton.MouseButton1Click:Connect(function()
-		if not jogadorSelecionado then showRedMessage("Selecione um jogador primeiro.", 3); return end
+		if not jogadorSelecionado then showRedMessage("Selecione um jogador", 3); return end
 		local char = player.Character
 		local targetChar = jogadorSelecionado.Character
 		if char and targetChar and targetChar:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("HumanoidRootPart") then
 			posicaoSalva = char.HumanoidRootPart.CFrame
 			char.HumanoidRootPart.CFrame = targetChar.HumanoidRootPart.CFrame
 		else
-			showRedMessage("Não foi possível teleportar (personagem ausente).", 3)
+			showRedMessage("Impossível teleportar", 3)
 		end
 	end)
 
 	tpBackButton.MouseButton1Click:Connect(function()
-		if not posicaoSalva then showRedMessage("Nenhuma posição salva.", 2); return end
+		if not posicaoSalva then showRedMessage("Nenhuma posição", 2); return end
 		local char = player.Character
 		if char and char:FindFirstChild("HumanoidRootPart") then
 			char.HumanoidRootPart.CFrame = posicaoSalva
@@ -1332,21 +1337,21 @@ end)
 	end
 
 	local function ligarViewPlayer()
-		if not jogadorSelecionado then showRedMessage("Selecione um jogador primeiro.", 2); return end
+		if not jogadorSelecionado then showRedMessage("Selecione um jogador", 2); return end
 		if not jogadorSelecionado.Character then showRedMessage("Jogador não tem personagem.", 2); return end
 		local targetHumanoid = jogadorSelecionado.Character:FindFirstChildWhichIsA("Humanoid")
-		if not targetHumanoid then showRedMessage("Humanoid alvo não encontrado.", 2); return end
+		if not targetHumanoid then showRedMessage("Alvo não encontrado", 2); return end
 		cameraBackupSubject = camera.CameraSubject
 		cameraBackupType = camera.CameraType
 		pcall(function() camera.CameraSubject = targetHumanoid; camera.CameraType = Enum.CameraType.Custom end)
 		viewPlayerAtivo = true
 		viewPlayerButton.Text = "👁️ View Player [ON]"
 		
-		-- *** ALTERAÇÃO 1: Lógica aprimorada para reconectar câmera após morte ***
+            -- Reconectar a câmera de view mesmo após a morte do alvo
 		viewConnection = RunService.RenderStepped:Connect(function()
 			if not viewPlayerAtivo then return end
 			
-			-- Se o jogador saiu do jogo, desliga
+			-- Se o jogador saiu do jogo, desliga o view
 			if not jogadorSelecionado or not jogadorSelecionado.Parent then 
 				desligarViewPlayer()
 				return 
@@ -1458,13 +1463,13 @@ sofaButton.MouseButton1Click:Connect(function()
 
 	if success and result then
 		-- A RE:InvokeServer normalmente retorna algo se deu certo ou nil se não implementado
-		showRedMessage("Script 'Get Couch' executado com sucesso!", 2)
+		showRedMessage("Couch pego com sucess", 2)
 	elseif not success then
 		-- Se InvokeServer falhar (ex: erro no servidor ou não existe)
-		showRedMessage("ERRO ao executar 'Get Couch': Falha no InvokeServer.", 3)
+		showRedMessage("Couch não pego.", 3)
 	else
 		-- Se InvokeServer existir mas retornar algo que sugira falha na lógica do servidor
-		showRedMessage("Script 'Get Couch' executado, mas resultado indefinido.", 3)
+		showRedMessage("Erro no scrip, reporte.", 3)
 	end
 end)
 
@@ -1508,7 +1513,7 @@ killAllButton.MouseButton1Click:Connect(function()
         end
     end)
 
-    -- Giro insano
+    -- Giro fing
     local spin = RunService.Heartbeat:Connect(function(dt)
         root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)
     end)
@@ -1526,7 +1531,7 @@ killAllButton.MouseButton1Click:Connect(function()
         task.wait(0.1)
     end
 
-    -- Primeiro Couch
+    -- Primeiro equipa o couch
     equipCouch()
 
     -- Coleta alvos vivos e de pé
@@ -1542,7 +1547,7 @@ killAllButton.MouseButton1Click:Connect(function()
 
     showRedMessage("MASSACRE INICIADO • "..#targets.." ALVOS", 4)
 
-    -- MATA TODOS (exatamente como você gosta)
+    -- MATA TODOS
     for i, plr in ipairs(targets) do
         local tChar = plr.Character
         if not tChar or not tChar:FindFirstChild("HumanoidRootPart") then continue end
@@ -1599,7 +1604,7 @@ killAllButton.MouseButton1Click:Connect(function()
     p1:Destroy()
     p2:Destroy()
 
-    showRedMessage("SERVIDOR ANIQUILADO • "..#targets.." MORTOS", 6)
+    showRedMessage("SERVIDOR LIMPO• "..#targets.." MORTOS", 6)
 end)
 
 killPlayerButton.MouseButton1Click:Connect(function()
