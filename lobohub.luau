@@ -417,13 +417,13 @@ tabCorner.Parent = tabContainer
 		return b
 	end
 
-	local espToggle = makeFuncButton(pageParaMim, "🌐 ESP [OFF]", Color3.fromRGB(200,70,70))
-	local clickTPToggle = makeFuncButton(pageParaMim, "👆 Click TP [OFF]", Color3.fromRGB(200,70,70))
-	local noclipToggle = makeFuncButton(pageParaMim, "🚫 Noclip [OFF]", Color3.fromRGB(200,70,70))
-	local infiniteJumpToggle = makeFuncButton(pageParaMim, "🦘 Pulo Infinito [OFF]", Color3.fromRGB(200,70,70))
-    local flingBodyToggle = makeFuncButton(pageParaMim,"👺 Fling [OFF]", Color3.fromRGB(200,70,70))
-    local antiSitToggle = makeFuncButton(pageProtecoes,"🪑 AntiSit [OFF]", Color3.fromRGB(200,70,70))
-	local dynamicShadowsToggle = makeFuncButton(pageClient, "💡 Sombras [ON]", Color3.fromRGB(60,60,60))
+	local espToggle = makeFuncButton(pageParaMim, "🌐 ESP [OFF]", Color3.fromRGB(30, 30, 30))
+	local clickTPToggle = makeFuncButton(pageParaMim, "👆 Click TP [OFF]", Color3.fromRGB(30, 30, 30))
+	local noclipToggle = makeFuncButton(pageParaMim, "🚫 Noclip [OFF]", Color3.fromRGB(30, 30, 30))
+	local infiniteJumpToggle = makeFuncButton(pageParaMim, "🦘 Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
+    local flingBodyToggle = makeFuncButton(pageParaMim,"👺 Fling [OFF]", Color3.fromRGB(30, 30, 30))
+    local antiSitToggle = makeFuncButton(pageProtecoes,"🪑 AntiSit [OFF]", Color3.fromRGB(30, 30, 30))
+	local dynamicShadowsToggle = makeFuncButton(pageClient, "💡 Sombras [ON]", Color3.fromRGB(30, 30, 30))
 	
 	
 	local flightFrame = Instance.new("Frame")
@@ -556,8 +556,8 @@ tabCorner.Parent = tabContainer
 
 	local function setToggleColor(button, active)
 		if not button then return end
-		local onColor = Color3.fromRGB(70,200,70)
-		local offColor = Color3.fromRGB(200,70,70)
+		local onColor = Color3.fromRGB(70, 70, 70)
+		local offColor = Color3.fromRGB(30, 30, 30)
 		pcall(function()
 			local tween = TweenService:Create(button, TweenInfo.new(0.15), {BackgroundColor3 = active and onColor or offColor})
 			tween:Play()
@@ -1534,12 +1534,12 @@ killAllButton.MouseButton1Click:Connect(function()
     -- Primeiro equipa o couch
     equipCouch()
 
-    -- Coleta alvos vivos e de pé
+    -- Coleta alvos vivos, de pé e que ainda estão no jogo
     local targets = {}
     for _, plr in ipairs(game.Players:GetPlayers()) do
         if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
             local tHum = plr.Character.Humanoid
-            if tHum.Health > 0 and not tHum.Sit then
+            if tHum.Health > 0 and tHum.Sit == false then
                 table.insert(targets, plr)
             end
         end
@@ -1550,29 +1550,37 @@ killAllButton.MouseButton1Click:Connect(function()
     -- MATA TODOS
     for i, plr in ipairs(targets) do
         local tChar = plr.Character
-        if not tChar or not tChar:FindFirstChild("HumanoidRootPart") then continue end
+        if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then continue end -- desistiu se saiu
         local tRoot = tChar.HumanoidRootPart
         local tHum = tChar.Humanoid
 
+        -- Ignora completamente quem está sentado ou já morreu
         if tHum.Health <= 0 or tHum.Sit then continue end
 
         -- Couch novo pra cada vítima
         equipCouch()
 
-        -- Persegue até sentar
+        -- Persegue até sentar ou algo errado acontecer
         repeat
-            if not tRoot.Parent then break end
+            tChar = plr.Character
+            if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then break end -- saiu do jogo → desiste
+            tRoot = tChar.HumanoidRootPart
+            tHum = tChar.Humanoid
+
+            if tHum.Sit or tHum.Health <= 0 then break end -- sentou ou morreu → para de perseguir
+
             root.CFrame = tRoot.CFrame * CFrame.new(1, -4, 0)
             root.Velocity = Vector3.zero
             task.wait()
-        until tHum.Sit or tHum.Health <= 0 or not tRoot.Parent
+        until tHum.Sit or tHum.Health <= 0 or not plr.Parent
 
-        if tHum.Sit and tRoot.Parent then
+        -- Só mata se ainda estiver no jogo e sentado (não mata quem está sentado desde o início ou saiu)
+        if tHum.Sit and plr.Parent and tRoot.Parent then
             root.CFrame = CFrame.new(root.Position.X, -200, root.Position.Z)
-            task.wait(0.5)           -- segurando o sofá
-            hum:UnequipTools()       -- solta
-            task.wait(0.2)           -- total 0.7s no void
-            root.CFrame = savedCFrame -- volta
+            task.wait(0.5)
+            hum:UnequipTools()
+            task.wait(0.2)
+            root.CFrame = savedCFrame
 
             -- Deleta o Couch (mata o alvo)
             task.spawn(function()
@@ -1588,7 +1596,7 @@ killAllButton.MouseButton1Click:Connect(function()
                 end
             end)
 
-            task.wait(0.3) -- delay suave entre kills (evita lag e falhas)
+            task.wait(0.3)
         end
     end
 
@@ -1604,7 +1612,7 @@ killAllButton.MouseButton1Click:Connect(function()
     p1:Destroy()
     p2:Destroy()
 
-    showRedMessage("SERVIDOR LIMPO• "..#targets.." MORTOS", 6)
+    showRedMessage("SERVIDOR LIMPO • "..#targets.." MORTOS", 6)
 end)
 
 killPlayerButton.MouseButton1Click:Connect(function()
