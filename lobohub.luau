@@ -112,7 +112,7 @@ local function iniciarHub()
 	mainFrame.Name = "MainFrame"
 	mainFrame.Size = UDim2.new(0, 500, 0, 460)
 	mainFrame.Position = UDim2.new(0.5, -250, 0.5, -230)
-	mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 	mainFrame.Visible = false
 	mainFrame.Draggable = true
 	mainFrame.Parent = loboHubGui
@@ -125,15 +125,19 @@ local function iniciarHub()
 	local header = Instance.new("Frame")
 	header.Name = "Header"
 	header.Size = UDim2.new(1, 0, 0, 40)
-	header.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	header.Parent = mainFrame
 	trackGui(header)
+	
+	local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 12) -- 12 = arredondado suave
+headerCorner.Parent = header
 
 	local titulo = Instance.new("TextLabel")
 	titulo.Name = "Titulo"
 	titulo.Size = UDim2.new(1, 0, 1, 0)
 	titulo.Text = "Lobo Hub [DEMO]"
-	titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
+	titulo.TextColor3 = Color3.fromRGB(255, 0, 255)
 	titulo.Font = Enum.Font.SourceSansBold
 	titulo.TextScaled = true
 	titulo.BackgroundTransparency = 1
@@ -177,9 +181,13 @@ local function iniciarHub()
 	tabContainer.Name = "TabContainer"
 	tabContainer.Size = UDim2.new(0, 140, 1, -40)
 	tabContainer.Position = UDim2.new(0, 0, 0, 40)
-	tabContainer.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	tabContainer.BackgroundColor3 = Color3.fromRGB(2, 2, 2)
 	tabContainer.Parent = mainFrame
 	trackGui(tabContainer)
+	
+	local tabCorner = Instance.new("UICorner")
+tabCorner.CornerRadius = UDim.new(0, 12)
+tabCorner.Parent = tabContainer
 
 	local tabLayout = Instance.new("UIListLayout")
 	tabLayout.Padding = UDim.new(0, 5)
