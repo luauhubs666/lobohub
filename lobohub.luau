@@ -1,4 +1,3 @@
-
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TextService = game:GetService("TextService")
@@ -278,7 +277,7 @@ tabCorner.Parent = tabContainer
 
 	local criadoresLabel = Instance.new("TextLabel")
 	criadoresLabel.Size = UDim2.new(1, -10, 0, 30)
-	criadoresLabel.Text = "Criadores: Kauã, ChatGPT, criatividade"
+	criadoresLabel.Text = "Criadores: Kauã, IA, criatividade"
 	criadoresLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 	criadoresLabel.BackgroundTransparency = 1
 	criadoresLabel.Font = Enum.Font.SourceSansItalic
@@ -381,7 +380,7 @@ tabCorner.Parent = tabContainer
 		pageProtecoes.Visible = true
 	end)
 
-
+    -- Selecionar player
 	local playerSelectButton = Instance.new("TextButton")
 	playerSelectButton.Name = "PlayerSelectButton"
 	playerSelectButton.Size = UDim2.new(1, -10, 0, 40)
@@ -414,7 +413,7 @@ tabCorner.Parent = tabContainer
 		b.Size = UDim2.new(1, -10, 0, 40)
 		b.Text = text
 		b.TextColor3 = Color3.fromRGB(255,255,255)
-		b.BackgroundColor3 = color or Color3.fromRGB(60,60,60)
+		b.BackgroundColor3 = color or Color3.fromRGB(30, 30, 30)
 		b.Font = Enum.Font.SourceSansBold
 		b.TextScaled = true
 		b.Parent = parent
@@ -440,7 +439,7 @@ tabCorner.Parent = tabContainer
 	local flightToggle = Instance.new("TextButton")
 	flightToggle.Size = UDim2.new(0, 180, 1, 0)
 	flightToggle.Position = UDim2.new(0, 0, 0, 0)
-	flightToggle.Text = "🕊 Voo [OFF]"
+	flightToggle.Text = "🪽 Voo [OFF]"
 	flightToggle.Font = Enum.Font.SourceSansBold
 	flightToggle.TextColor3 = Color3.fromRGB(255,255,255)
 	flightToggle.BackgroundColor3 = Color3.fromRGB(120,60,180)
@@ -473,7 +472,7 @@ tabCorner.Parent = tabContainer
 	speedFrame.Parent = pageParaMim
 	trackGui(speedFrame)
 
-	-- *** ALTERAÇÃO NO LAYOUT: Ocupando o espaço horizontal ***
+	-- Valor de velocidade, textbox
 	local speedValueBox = Instance.new("TextBox")
 	speedValueBox.Size = UDim2.new(1, 0, 1, 0)
 	speedValueBox.Position = UDim2.new(0, 0, 0, 0)
@@ -494,7 +493,7 @@ tabCorner.Parent = tabContainer
 	local tpBackButton = makeFuncButton(pageFuncoes, "↩️ Voltar Posição")
 	local viewPlayerButton = makeFuncButton(pageFuncoes, "👁️ View Player [OFF]")
 	local killPlayerButton = makeFuncButton(pageFuncoes, "🔪 Kill Player", Color3.fromRGB(180,40,40))
-    local killAllButton = makeFuncButton(pageFuncoes, "🔥 Kill All", Color3.fromRGB(0, 0, 0))
+    local killAllButton = makeFuncButton(pageFuncoes, "🔥 Kill All", Color3.fromRGB(100, 0, 0))
 	local debugToggle = Instance.new("TextButton")
 	debugToggle.Name = "DebugToggle"
 	debugToggle.Size = UDim2.new(1, -10, 0, 40) -- Ajuste de layout
@@ -526,38 +525,6 @@ tabCorner.Parent = tabContainer
 	debugCorner.CornerRadius = UDim.new(0,6)
 	debugCorner.Parent = debugOverlay
 
-	local function showRedMessage(text, duration)
-		duration = duration or 3
-		local gui = Instance.new("ScreenGui")
-		gui.Name = "LoboHub_RedMsg"
-		gui.ResetOnSpawn = false
-		gui.Parent = playerGui
-		trackGui(gui)
-
-		local frame = Instance.new("Frame")    
-		frame.Size = UDim2.new(0.6, 0, 0, 48)    
-		frame.Position = UDim2.new(0.5, 0, 0.05, 0)    
-		frame.AnchorPoint = Vector2.new(0.5,0)    
-		frame.BackgroundColor3 = Color3.fromRGB(40,0,0)    
-		frame.BorderSizePixel = 0    
-		frame.Parent = gui    
-		trackGui(frame)    
-
-		local label = Instance.new("TextLabel")    
-		label.Size = UDim2.new(1, -8, 1, -8)    
-		label.Position = UDim2.new(0,4,0,4)    
-		label.BackgroundTransparency = 1    
-		label.TextColor3 = Color3.fromRGB(255,100,100)    
-		label.Font = Enum.Font.SourceSansBold    
-		label.TextSize = 20    
-		label.TextScaled = true    
-		label.Text = text    
-		label.Parent = frame    
-
-		task.delay(duration, function()    
-			if gui and gui.Parent then gui:Destroy() end    
-		end)
-	end
 
 	local function setToggleColor(button, active)
 		if not button then return end
@@ -884,7 +851,6 @@ tabCorner.Parent = tabContainer
 		
 		if not char then 
 			if noclipAtivo then
-				showRedMessage("Aguarde o personagem carregar...", 2)
 			end
 			noclipAtivo = false
 			noclipToggle.Text = base .. " [OFF]"
@@ -1037,7 +1003,6 @@ local function startFlingMode()
 	local root = char and char:FindFirstChild("HumanoidRootPart")
 	
 	if not hum or not root then
-		showRedMessage("Aguarde o personagem carregar.", 2)
 		flingBodyAtivo = false
 		flingBodyToggle.Text = "👺 Fling [OFF]"
         setToggleColor(flingBodyToggle, false)
@@ -1092,9 +1057,6 @@ local function startFlingMode()
 		end
 	end)
 	trackConnection(flingRotateConnection)
-
-
-	showRedMessage("Fling ativado!", 2)
 end
 
 
@@ -1109,10 +1071,7 @@ local function stopFlingMode()
 		hum.AutoRotate = true
 		hum:ChangeState(Enum.HumanoidStateType.Running)
 	end
-
-	showRedMessage("Fling desativado!", 2)
 end
-
 
 -- Lógica do botão fling
 flingBodyToggle.MouseButton1Click:Connect(function()
@@ -1177,7 +1136,6 @@ end)
 			end
 			dynamicShadowsToggle.Text = "Sombras [OFF]"
 			setToggleColor(dynamicShadowsToggle, true)
-			showRedMessage("Streaming shadows off", 2)
 		else
 			local Lighting = game:GetService("Lighting")
 			Lighting.GlobalShadows = true
@@ -1188,7 +1146,6 @@ end)
 			end
 			dynamicShadowsToggle.Text = "Sombras [ON]"
 			setToggleColor(dynamicShadowsToggle, false)
-			showRedMessage("Streaming shadows on", 2)
 		end
 	end)
 
@@ -1212,7 +1169,6 @@ end)
 		local hrp = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
 		local humanoid = char:FindFirstChildOfClass("Humanoid")
 		if not hrp or not humanoid then
-			showRedMessage("Impossível voar.", 3)
 			return
 		end
 	   
@@ -1299,29 +1255,28 @@ end)
 	flightToggle.MouseButton1Click:Connect(function()
 		if flying then
 			stopFlight()
-			flightToggle.Text = "🕊 Voo [OFF]"
+			flightToggle.Text = "🪽 Voo [OFF]"
 			setToggleColor(flightToggle, false)
 		else
 			startFlight()
-			flightToggle.Text = "🕊 Voo [ON]"
+			flightToggle.Text = "🪽 Voo [ON]"
 			setToggleColor(flightToggle, true)
 		end
 	end)
 
 	tpToPlayerButton.MouseButton1Click:Connect(function()
-		if not jogadorSelecionado then showRedMessage("Selecione um jogador", 3); return end
+		if not jogadorSelecionado then return end
 		local char = player.Character
 		local targetChar = jogadorSelecionado.Character
 		if char and targetChar and targetChar:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("HumanoidRootPart") then
 			posicaoSalva = char.HumanoidRootPart.CFrame
 			char.HumanoidRootPart.CFrame = targetChar.HumanoidRootPart.CFrame
 		else
-			showRedMessage("Impossível teleportar", 3)
 		end
 	end)
 
 	tpBackButton.MouseButton1Click:Connect(function()
-		if not posicaoSalva then showRedMessage("Nenhuma posição", 2); return end
+		if not posicaoSalva then return end
 		local char = player.Character
 		if char and char:FindFirstChild("HumanoidRootPart") then
 			char.HumanoidRootPart.CFrame = posicaoSalva
@@ -1338,20 +1293,21 @@ end)
 		end
 		viewPlayerAtivo = false
 		viewPlayerButton.Text = "👁️ View Player [OFF]"
+		setToggleColor(viewPlayerButton, false)
 		if viewConnection then safeDisconnect(viewConnection); viewConnection = nil end
 	end
 
 	local function ligarViewPlayer()
-		if not jogadorSelecionado then showRedMessage("Selecione um jogador", 2); return end
-		if not jogadorSelecionado.Character then showRedMessage("Jogador não tem personagem.", 2); return end
+		if not jogadorSelecionado then return end
+		if not jogadorSelecionado.Character then return end
 		local targetHumanoid = jogadorSelecionado.Character:FindFirstChildWhichIsA("Humanoid")
-		if not targetHumanoid then showRedMessage("Alvo não encontrado", 2); return end
+		if not targetHumanoid then return end
 		cameraBackupSubject = camera.CameraSubject
 		cameraBackupType = camera.CameraType
 		pcall(function() camera.CameraSubject = targetHumanoid; camera.CameraType = Enum.CameraType.Custom end)
 		viewPlayerAtivo = true
 		viewPlayerButton.Text = "👁️ View Player [ON]"
-		
+		setToggleColor(viewPlayerButton, true)
             -- Reconectar a câmera de view mesmo após a morte do alvo
 		viewConnection = RunService.RenderStepped:Connect(function()
 			if not viewPlayerAtivo then return end
@@ -1468,13 +1424,10 @@ sofaButton.MouseButton1Click:Connect(function()
 
 	if success and result then
 		-- A RE:InvokeServer normalmente retorna algo se deu certo ou nil se não implementado
-		showRedMessage("Couch pego com sucess", 2)
 	elseif not success then
 		-- Se InvokeServer falhar (ex: erro no servidor ou não existe)
-		showRedMessage("Couch não pego.", 3)
 	else
 		-- Se InvokeServer existir mas retornar algo que sugira falha na lógica do servidor
-		showRedMessage("Erro no scrip, reporte.", 3)
 	end
 end)
 
@@ -1482,7 +1435,6 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- Nota: Assumimos que 'showRedMessage' e 'jogadorSelecionado' já estão definidos no escopo do seu script maior.
 
 killAllButton.MouseButton1Click:Connect(function()
     local player = game.Players.LocalPlayer
@@ -1550,7 +1502,6 @@ killAllButton.MouseButton1Click:Connect(function()
         end
     end
 
-    showRedMessage("MASSACRE INICIADO • "..#targets.." ALVOS", 4)
 
     -- MATA TODOS
     for i, plr in ipairs(targets) do
@@ -1616,13 +1567,10 @@ killAllButton.MouseButton1Click:Connect(function()
     end
     p1:Destroy()
     p2:Destroy()
-
-    showRedMessage("SERVIDOR LIMPO • "..#targets.." MORTOS", 6)
 end)
 
 killPlayerButton.MouseButton1Click:Connect(function()
     if not jogadorSelecionado then
-        showRedMessage("Selecione um player primeiro!", 3)
         return
     end
 
@@ -1634,7 +1582,6 @@ killPlayerButton.MouseButton1Click:Connect(function()
     local targetHum = targetChar and targetChar:FindFirstChild("Humanoid")
 
     if not hum or not root or not targetRoot or not targetHum then
-        showRedMessage("Erro: Personagem inválido.", 3)
         return
     end
 
@@ -1709,7 +1656,6 @@ killPlayerButton.MouseButton1Click:Connect(function()
             -- +0,2s → total 0,7s no void → VOLTA IMEDIATAMENTE
             task.wait(0.2)
             root.CFrame = savedCFrame
-            showRedMessage("Alvo Eliminado!", 2)
 
             -- SÓ AGORA deleta o Couch (você já voltou, alvo cai 100%)
             task.spawn(function()
@@ -1819,5 +1765,5 @@ end)
 	killGuiButton.MouseButton1Click:Connect(killAllHub)
 end
 
--- Inicia o Hub de forma robusta
+-- Inicia o Hub
 pcall(iniciarHub)
