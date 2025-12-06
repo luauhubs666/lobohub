@@ -494,6 +494,7 @@ tabCorner.Parent = tabContainer
 	local viewPlayerButton = makeFuncButton(pageFuncoes, "👁️ View Player [OFF]")
 	local killPlayerButton = makeFuncButton(pageFuncoes, "🔪 Kill Player", Color3.fromRGB(180,40,40))
     local killAllButton = makeFuncButton(pageFuncoes, "🔥 Kill All", Color3.fromRGB(100, 0, 0))
+    local bringAllButton = makeFuncButton(pageFuncoes, "🧲Bring All", Color3.fromRGB(80, 0, 150))
 	local debugToggle = Instance.new("TextButton")
 	debugToggle.Name = "DebugToggle"
 	debugToggle.Size = UDim2.new(1, -10, 0, 40) -- Ajuste de layout
@@ -1686,6 +1687,98 @@ killPlayerButton.MouseButton1Click:Connect(function()
     end
     if plate1 and plate1.Parent then plate1:Destroy() end
     if plate2 and plate2.Parent then plate2:Destroy() end
+end)
+
+bringAllButton.MouseButton1Click:Connect(function() local player = game.Players.LocalPlayer local char = player.Character or player.CharacterAdded:Wait() local hum = char:WaitForChild("Humanoid") local root = char:WaitForChild("HumanoidRootPart") local RunService = game:GetService("RunService")
+local savedCFrame = root.CFrame
+
+-- Giro fing (mantido por enquanto, mas pode ser removido se for considerado proteção)
+local spin = RunService.Heartbeat:Connect(function(dt)
+    root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)
+end)
+
+-- Função pra pegar Couch novo
+local function equipCouch()
+    local tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+    if not tool then
+        game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer("PickingTools", "Couch")
+        repeat task.wait()
+            tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+        until tool
+    end
+    hum:EquipTool(tool)
+    task.wait(0.1)
+end
+
+-- Primeiro equipa o couch
+equipCouch()
+
+-- Coleta alvos vivos, de pé e que ainda estão no jogo
+local targets = {}
+for _, plr in ipairs(game.Players:GetPlayers()) do
+    if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+        local tHum = plr.Character.Humanoid
+        if tHum.Health > 0 and tHum.Sit == false then
+            table.insert(targets, plr)
+        end
+    end
+end
+
+-- TRÁS TODOS
+for i, plr in ipairs(targets) do
+    local tChar = plr.Character
+    if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then continue end -- desistiu se saiu
+    local tRoot = tChar.HumanoidRootPart
+    local tHum = tChar.Humanoid
+
+    -- Ignora completamente quem está sentado ou já morreu
+    if tHum.Health <= 0 or tHum.Sit then continue end
+
+    -- Couch novo pra cada vítima
+    equipCouch()
+
+    -- Persegue até sentar, com timeout de 10 segundos
+    local startTime = tick()
+    repeat
+        tChar = plr.Character
+        if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then break end -- saiu do jogo → desiste
+        tRoot = tChar.HumanoidRootPart
+        tHum = tChar.Humanoid
+
+        if tHum.Sit or tHum.Health <= 0 then break end -- sentou ou morreu → para de perseguir
+
+        root.CFrame = tRoot.CFrame * CFrame.new(1, -4, 0)
+        root.Velocity = Vector3.zero
+        task.wait()
+    until tHum.Sit or tHum.Health <= 0 or not plr.Parent or (tick() - startTime > 10)
+
+    -- Só traz se ainda estiver no jogo e sentou (ignora timeout ou quem estava sentado/saiu)
+    if tHum.Sit and plr.Parent and tRoot.Parent and (tick() - startTime <= 10) then
+        root.CFrame = savedCFrame
+        task.wait(0.5)
+        hum:UnequipTools()
+        task.wait(0.2)
+
+        -- Deleta o Couch (limpa, mas sem matar pois não há void)
+        task.spawn(function()
+            task.wait(0.1)
+            pcall(function()
+                game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer("PlayerWantsToDeleteTool", "Couch")
+            end)
+            for _, obj in {char, player.Backpack, player:FindFirstChild("StarterGear")} do
+                if obj then
+                    local c = obj:FindFirstChild("Couch")
+                    if c then c:Destroy() end
+                end
+            end
+        end)
+
+        task.wait(0.3)
+    end
+end
+
+-- Limpeza final
+spin:Disconnect()
 end)
 
 	local function killAllHub()
