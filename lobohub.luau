@@ -198,7 +198,7 @@ tabCorner.Parent = tabContainer
 		btn.Position = UDim2.new(0, 5, 0, 5)
 		btn.Text = nameText
 		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 		btn.Font = Enum.Font.SourceSansBold
 		btn.TextScaled = true
 		btn.Parent = tabContainer
@@ -244,7 +244,7 @@ tabCorner.Parent = tabContainer
 
 	local apelidoLabel = Instance.new("TextLabel")
 	apelidoLabel.Size = UDim2.new(1, -10, 0, 30)
-	apelidoLabel.Text = "Apelido: Carregando..."
+	apelidoLabel.Text = "Name: Loading..."
 	apelidoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	apelidoLabel.BackgroundTransparency = 1
 	apelidoLabel.Font = Enum.Font.SourceSansBold
@@ -255,7 +255,7 @@ tabCorner.Parent = tabContainer
 
 	local arrobaLabel = Instance.new("TextLabel")
 	arrobaLabel.Size = UDim2.new(1, -10, 0, 30)
-	arrobaLabel.Text = "@: Carregando..."
+	arrobaLabel.Text = "Username: Loading..."
 	arrobaLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	arrobaLabel.BackgroundTransparency = 1
 	arrobaLabel.Font = Enum.Font.SourceSansBold
@@ -266,7 +266,7 @@ tabCorner.Parent = tabContainer
 
 	local idadeContaLabel = Instance.new("TextLabel")
 	idadeContaLabel.Size = UDim2.new(1, -10, 0, 30)
-	idadeContaLabel.Text = "Idade da Conta: Carregando..."
+	idadeContaLabel.Text = "Account Age: Loading..."
 	idadeContaLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	idadeContaLabel.BackgroundTransparency = 1
 	idadeContaLabel.Font = Enum.Font.SourceSansBold
@@ -277,7 +277,7 @@ tabCorner.Parent = tabContainer
 
 	local criadoresLabel = Instance.new("TextLabel")
 	criadoresLabel.Size = UDim2.new(1, -10, 0, 30)
-	criadoresLabel.Text = "Criadores: Kauã, IA, criatividade"
+	criadoresLabel.Text = "Dev: Ice - Elementar"
 	criadoresLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 	criadoresLabel.BackgroundTransparency = 1
 	criadoresLabel.Font = Enum.Font.SourceSansItalic
@@ -439,7 +439,7 @@ tabCorner.Parent = tabContainer
 	local flightToggle = Instance.new("TextButton")
 	flightToggle.Size = UDim2.new(0, 180, 1, 0)
 	flightToggle.Position = UDim2.new(0, 0, 0, 0)
-	flightToggle.Text = "🪽 Voo [OFF]"
+	flightToggle.Text = "Fly"
 	flightToggle.Font = Enum.Font.SourceSansBold
 	flightToggle.TextColor3 = Color3.fromRGB(255,255,255)
 	flightToggle.BackgroundColor3 = Color3.fromRGB(120,60,180)
@@ -489,12 +489,13 @@ tabCorner.Parent = tabContainer
 	speedValueCorner.CornerRadius = UDim.new(0,6)
 	speedValueCorner.Parent = speedValueBox
 
-	local tpToPlayerButton = makeFuncButton(pageFuncoes, "👆 TP no Jogador")
-	local tpBackButton = makeFuncButton(pageFuncoes, "↩️ Voltar Posição")
-	local viewPlayerButton = makeFuncButton(pageFuncoes, "👁️ View Player [OFF]")
-	local killPlayerButton = makeFuncButton(pageFuncoes, "🔪 Kill Player", Color3.fromRGB(180,40,40))
-    local killAllButton = makeFuncButton(pageFuncoes, "🔥 Kill All", Color3.fromRGB(100, 0, 0))
-    local bringAllButton = makeFuncButton(pageFuncoes, "🧲Bring All", Color3.fromRGB(80, 0, 150))
+	local tpToPlayerButton = makeFuncButton(pageFuncoes, " Go Player")
+	local tpBackButton = makeFuncButton(pageFuncoes, "Come Back")
+	local viewPlayerButton = makeFuncButton(pageFuncoes, "View Player [OFF]")
+	local killPlayerButton = makeFuncButton(pageFuncoes, "Kill Player", Color3.fromRGB(180,40,40))
+    local killAllButton = makeFuncButton(pageFuncoes, "Kill All", Color3.fromRGB(100, 0, 0))
+    local bringPlayerButton = makeFuncButton(pageFuncoes, "Bring Player", Color3.fromRGB(60, 100, 170))
+    local bringAllButton = makeFuncButton(pageFuncoes, "Bring All", Color3.fromRGB(80, 0, 150))
 	local debugToggle = Instance.new("TextButton")
 	debugToggle.Name = "DebugToggle"
 	debugToggle.Size = UDim2.new(1, -10, 0, 40) -- Ajuste de layout
@@ -1256,11 +1257,11 @@ end)
 	flightToggle.MouseButton1Click:Connect(function()
 		if flying then
 			stopFlight()
-			flightToggle.Text = "🪽 Voo [OFF]"
+			flightToggle.Text = "Fly"
 			setToggleColor(flightToggle, false)
 		else
 			startFlight()
-			flightToggle.Text = "🪽 Voo [ON]"
+			flightToggle.Text = "Fly"
 			setToggleColor(flightToggle, true)
 		end
 	end)
@@ -1688,6 +1689,95 @@ killPlayerButton.MouseButton1Click:Connect(function()
     if plate1 and plate1.Parent then plate1:Destroy() end
     if plate2 and plate2.Parent then plate2:Destroy() end
 end)
+
+-- BringPlayer lógica
+bringPlayerButton.MouseButton1Click:Connect(function()
+    if not jogadorSelecionado then
+        return
+    end
+
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hum = char:FindFirstChild("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local targetChar = jogadorSelecionado.Character
+    local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+    local targetHum = targetChar and targetChar:FindFirstChild("Humanoid")
+
+    if not hum or not root or not targetRoot or not targetHum then
+        return
+    end
+
+    local savedCFrame = root.CFrame
+
+    -- Pose rígida total
+    hum.PlatformStand = true
+    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+        if state ~= Enum.HumanoidStateType.None then
+            hum:SetStateEnabled(state, false)
+        end
+    end
+
+    -- Pega o Couch
+    local couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+    if not couchTool then
+        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+        repeat task.wait() couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+        until couchTool
+    end
+    hum:EquipTool(couchTool)
+
+    -- Giro enquanto espera sentar
+    local spin = game:GetService("RunService").Heartbeat:Connect(function(dt)
+        root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)
+    end)
+
+    -- Espera o alvo sentar
+    while task.wait() do
+        if not targetRoot.Parent or not targetHum.Parent then break end
+        
+        -- Garante que o player está posicionado para forçar o assento
+        root.CFrame = targetRoot.CFrame * CFrame.new(1, -4, 0)
+        root.Velocity = Vector3.new(0,0,0)
+
+        if targetHum.Sit then
+            spin:Disconnect()
+            
+            -- VOLTA IMEDIATAMENTE para a posição salva
+            root.CFrame = savedCFrame
+
+            -- SOLTA O COUCH
+            task.wait(0.5) -- Pequena espera para garantir que o alvo sentou e registrou
+            hum:UnequipTools()
+
+            -- SÓ AGORA deleta o Couch (você já voltou, alvo cai)
+            task.spawn(function()
+                task.wait(0.1)
+                pcall(function()
+                    local args = {"PlayerWantsToDeleteTool", "Couch"}
+                    game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+                end)
+                for _, obj in {char, player.Backpack, player:FindFirstChild("StarterGear")} do
+                    if obj then
+                        local t = obj:FindFirstChild("Couch")
+                        if t then t:Destroy() end
+                    end
+                end
+            end)
+
+            break
+        end
+    end
+
+    -- Limpeza final
+    -- A conexão 'neverDie' e as 'plate' foram removidas daqui.
+    hum.PlatformStand = false
+    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+        if state ~= Enum.HumanoidStateType.None then
+            hum:SetStateEnabled(state, true)
+        end
+    end
+end)
+
 
 bringAllButton.MouseButton1Click:Connect(function() local player = game.Players.LocalPlayer local char = player.Character or player.CharacterAdded:Wait() local hum = char:WaitForChild("Humanoid") local root = char:WaitForChild("HumanoidRootPart") local RunService = game:GetService("RunService")
 local savedCFrame = root.CFrame
