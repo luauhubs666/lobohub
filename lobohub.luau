@@ -421,13 +421,14 @@ tabCorner.Parent = tabContainer
 		return b
 	end
 
-	local espToggle = makeFuncButton(pageParaMim, "🌐 ESP [OFF]", Color3.fromRGB(30, 30, 30))
-	local clickTPToggle = makeFuncButton(pageParaMim, "👆 Click TP [OFF]", Color3.fromRGB(30, 30, 30))
-	local noclipToggle = makeFuncButton(pageParaMim, "🚫 Noclip [OFF]", Color3.fromRGB(30, 30, 30))
-	local infiniteJumpToggle = makeFuncButton(pageParaMim, "🦘 Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
-    local flingBodyToggle = makeFuncButton(pageParaMim,"👺 Fling [OFF]", Color3.fromRGB(30, 30, 30))
-    local antiSitToggle = makeFuncButton(pageProtecoes,"🪑 AntiSit [OFF]", Color3.fromRGB(30, 30, 30))
-	local dynamicShadowsToggle = makeFuncButton(pageClient, "💡 Sombras [ON]", Color3.fromRGB(30, 30, 30))
+-- Opções
+	local espToggle = makeFuncButton(pageParaMim, "ESP [OFF]", Color3.fromRGB(30, 30, 30))
+	local clickTPToggle = makeFuncButton(pageParaMim, "Click TP [OFF]", Color3.fromRGB(30, 30, 30))
+	local noclipToggle = makeFuncButton(pageParaMim, "Noclip [OFF]", Color3.fromRGB(30, 30, 30))
+	local infiniteJumpToggle = makeFuncButton(pageParaMim, "Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
+    local flingBodyToggle = makeFuncButton(pageParaMim,"🌪 Tornado [OFF]", Color3.fromRGB(30, 30, 30))
+    local antiSitToggle = makeFuncButton(pageProtecoes,"AntiSit [OFF]", Color3.fromRGB(30, 30, 30))
+	local dynamicShadowsToggle = makeFuncButton(pageClient, "Shadows [ON]", Color3.fromRGB(30, 30, 30))
 	
 	
 	local flightFrame = Instance.new("Frame")
@@ -442,7 +443,7 @@ tabCorner.Parent = tabContainer
 	flightToggle.Text = "Fly"
 	flightToggle.Font = Enum.Font.SourceSansBold
 	flightToggle.TextColor3 = Color3.fromRGB(255,255,255)
-	flightToggle.BackgroundColor3 = Color3.fromRGB(120,60,180)
+	flightToggle.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	flightToggle.Parent = flightFrame
 	trackGui(flightToggle)
 
@@ -489,7 +490,7 @@ tabCorner.Parent = tabContainer
 	speedValueCorner.CornerRadius = UDim.new(0,6)
 	speedValueCorner.Parent = speedValueBox
 
-	local tpToPlayerButton = makeFuncButton(pageFuncoes, " Go Player")
+	local tpToPlayerButton = makeFuncButton(pageFuncoes, " Go to Player")
 	local tpBackButton = makeFuncButton(pageFuncoes, "Come Back")
 	local viewPlayerButton = makeFuncButton(pageFuncoes, "View Player [OFF]")
 	local killPlayerButton = makeFuncButton(pageFuncoes, "Kill Player", Color3.fromRGB(180,40,40))
@@ -743,7 +744,7 @@ tabCorner.Parent = tabContainer
 		if playerList.Visible then atualizarListaJogadores() end
 		if jogadorSelecionado and removed == jogadorSelecionado then
 			jogadorSelecionado = nil
-			playerSelectButton.Text = "👥 Selecionar Jogador..."
+			playerSelectButton.Text = "𖠋𖨆 Selecionar Jogador..."
 			if viewPlayerAtivo and type(desligarViewPlayer) == "function" then desligarViewPlayer() end
 		end
 	end)
@@ -793,7 +794,7 @@ tabCorner.Parent = tabContainer
     -- Lógica do ESP
 	espToggle.MouseButton1Click:Connect(function()
 		espAtivo = not espAtivo
-		espToggle.Text = "🌐 ESP" .. (espAtivo and " [ON]" or " [OFF]")
+		espToggle.Text = "ꙮ ESP" .. (espAtivo and " [ON]" or " [OFF]")
 		setToggleColor(espToggle, espAtivo)
 		if espAtivo then
 			if espConnection then safeDisconnect(espConnection); espConnection = nil end
@@ -993,92 +994,183 @@ antiSitToggle.MouseButton1Click:Connect(function()
 	end
 end)
 
-
--- Lógica do botão Fling
+-- Lógica do botão 🌪 Tornado
 local flingMotorConnection = nil
 local flingRotateConnection = nil
 local flingAnimationConnection = nil
+local animatorBlockConnection = nil
+local descendantBlockConnection = nil
+local originalMotor6DTransforms = {}
+local originalAnimator = nil
+
+-- Parar animações
+local function stopAllAnimations(humanoid)
+	for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+		pcall(function() track:Stop() end)
+	end
+end
+
+-- Bloquear Animator
+local function blockAnimator(humanoid)
+	for _, child in ipairs(humanoid:GetChildren()) do
+		if child:IsA("Animator") then
+			pcall(function() child:Destroy() end)
+		end
+	end
+
+	if animatorBlockConnection then safeDisconnect(animatorBlockConnection) end
+	animatorBlockConnection = humanoid. ChildAdded:Connect(function(child)
+		if child:IsA("Animator") then
+			pcall(function() child:Destroy() end)
+		end
+	end)
+	trackConnection(animatorBlockConnection)
+end
+
+-- Salvar Animator original
+local function saveOriginalAnimator(humanoid)
+	for _, child in ipairs(humanoid:GetChildren()) do
+		if child:IsA("Animator") then
+			originalAnimator = child: Clone()
+			break
+		end
+	end
+end
+
+-- Salvar transforms originais
+local function saveOriginalTransforms(character)
+	originalMotor6DTransforms = {}
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("Motor6D") then
+			originalMotor6DTransforms[part] = part. Transform
+		end
+	end
+end
+
+-- Congelar postura
+local function forceIdlePose(character)
+	for _, part in ipairs(character: GetDescendants()) do
+		if part:IsA("Motor6D") then
+			pcall(function()
+				part.Transform = CFrame.new()
+			end)
+		end
+	end
+
+	if descendantBlockConnection then safeDisconnect(descendantBlockConnection) end
+	descendantBlockConnection = character.DescendantAdded:Connect(function(part)
+		if part:IsA("Motor6D") then
+			pcall(function()
+				part.Transform = CFrame.new()
+			end)
+		end
+	end)
+	trackConnection(descendantBlockConnection)
+end
+
+-- Restaurar animações e postura
+local function restoreAnimations(humanoid, character)
+	-- Recriar Animator
+	if originalAnimator then
+		pcall(function()
+			local newAnimator = originalAnimator:Clone()
+			newAnimator.Parent = humanoid
+		end)
+	end
+	
+	-- Restaurar Motors6D
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("Motor6D") then
+			pcall(function()
+				if originalMotor6DTransforms[part] then
+					part.Transform = originalMotor6DTransforms[part]
+				end
+			end)
+		end
+	end
+	
+	task.wait(0.1)
+	stopAllAnimations(humanoid)
+end
 
 local function startFlingMode()
 	local char = player.Character
 	local hum = char and char:FindFirstChildOfClass("Humanoid")
 	local root = char and char:FindFirstChild("HumanoidRootPart")
-	
+
 	if not hum or not root then
 		flingBodyAtivo = false
-		flingBodyToggle.Text = "👺 Fling [OFF]"
-        setToggleColor(flingBodyToggle, false)
+		flingBodyToggle.Text = "🌪 Tornado [OFF]"
+		setToggleColor(flingBodyToggle, false)
 		return
 	end
 
-	-- Desativar animações do humanoid
-	-- Mata animações atuais
-	for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
-		track:Stop()
-	end
+	sofaRunning = true
 
-	-- Impede animação futura
-	if flingAnimationConnection then safeDisconnect(flingAnimationConnection) end
-	flingAnimationConnection = hum.AnimationPlayed:Connect(function(track)
-		task.wait()
-		track:Stop()
-	end)
-	trackConnection(flingAnimationConnection)
+	saveOriginalAnimator(hum)
+	saveOriginalTransforms(char)
 
-	-- Mantém  o humanoid vivo
-	hum.AutoRotate = false  -- Desativa auto rotação padrão do roblox
-	hum:ChangeState(Enum.HumanoidStateType.Running)
+	hum.AutoRotate = false
+	hum: ChangeState(Enum.HumanoidStateType.Running)
 
-	-- Travar Motor6Ds
+	blockAnimator(hum)
+	stopAllAnimations(hum)
+	forceIdlePose(char)
+
 	if flingMotorConnection then safeDisconnect(flingMotorConnection) end
 	flingMotorConnection = RunService.RenderStepped:Connect(function()
-		if not char or not char.Parent then return end
-
-		-- impede Roblox de reposicionar a rotação
-		hum.MoveDirection = Vector3.zero
-
-		for _, motor in ipairs(char:GetDescendants()) do
-			if motor:IsA("Motor6D") then
-				motor.Transform = CFrame.new()
-			end
+		if root and root.Parent then
+			root.CFrame = CFrame.new(root.Position) * root.CFrame.Rotation * CFrame. Angles(0, math. rad(300), 0)
 		end
 	end)
 	trackConnection(flingMotorConnection)
 
--- Rotação infinita rápida fling
+	-- Pegando o couch uma única vez
+	task.spawn(function()
+		pcall(function()
+			game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+		end)
 
-	if flingRotateConnection then safeDisconnect(flingRotateConnection) end
-	flingRotateConnection = RunService.RenderStepped:Connect(function(dt)
-		if root and root.Parent then
-			
-			-- Roblox tenta rotacionar?  Eu destruo a tentativa
-			root.CFrame = CFrame.new(root.Position) * 
-				root.CFrame.Rotation * 
-				CFrame.Angles(0, math.rad(300), 0)
+		task.wait(0.1)
 
+		local couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+		if couchTool and hum then
+			hum:EquipTool(couchTool)
 		end
 	end)
-	trackConnection(flingRotateConnection)
 end
 
-
 local function stopFlingMode()
+	sofaRunning = false
+
 	if flingMotorConnection then safeDisconnect(flingMotorConnection); flingMotorConnection = nil end
 	if flingRotateConnection then safeDisconnect(flingRotateConnection); flingRotateConnection = nil end
 	if flingAnimationConnection then safeDisconnect(flingAnimationConnection); flingAnimationConnection = nil end
+	if animatorBlockConnection then safeDisconnect(animatorBlockConnection); animatorBlockConnection = nil end
+	if descendantBlockConnection then safeDisconnect(descendantBlockConnection); descendantBlockConnection = nil end
 
 	local char = player.Character
 	local hum = char and char:FindFirstChildOfClass("Humanoid")
-	if hum then
+
+	if hum and char then
+		restoreAnimations(hum, char)
 		hum.AutoRotate = true
-		hum:ChangeState(Enum.HumanoidStateType.Running)
+		hum:ChangeState(Enum.HumanoidStateType. Running)
+	end
+
+	if hum then hum:UnequipTools() end
+
+	for _, obj in {char, player. Backpack, player:FindFirstChild("StarterGear")} do
+		if obj then
+			local c = obj: FindFirstChild("Couch")
+			if c then c:Destroy() end
+		end
 	end
 end
 
--- Lógica do botão fling
 flingBodyToggle.MouseButton1Click:Connect(function()
 	flingBodyAtivo = not flingBodyAtivo
-	local base = "👺 Fling"
+	local base = "🌪 Tornado"
 
 	flingBodyToggle.Text = base .. (flingBodyAtivo and " [ON]" or " [OFF]")
 	setToggleColor(flingBodyToggle, flingBodyAtivo)
@@ -1089,7 +1181,6 @@ flingBodyToggle.MouseButton1Click:Connect(function()
 		stopFlingMode()
 	end
 end)
-
 
 	speedValueBox:GetPropertyChangedSignal("Text"):Connect(function()
 		applySpeedValue()
@@ -1122,7 +1213,7 @@ end)
 		end
 	end)
 
-	dynamicShadowsToggle.Text = "Sombras [ON]"
+	dynamicShadowsToggle.Text = "Shadows [ON]"
 	setToggleColor(dynamicShadowsToggle, false)
 
 	dynamicShadowsToggle.MouseButton1Click:Connect(function()
@@ -1136,7 +1227,7 @@ end)
 					obj.CastShadow = false
 				end
 			end
-			dynamicShadowsToggle.Text = "Sombras [OFF]"
+			dynamicShadowsToggle.Text = "Shadows [OFF]"
 			setToggleColor(dynamicShadowsToggle, true)
 		else
 			local Lighting = game:GetService("Lighting")
@@ -1146,7 +1237,7 @@ end)
 					obj.CastShadow = true
 				end
 			end
-			dynamicShadowsToggle.Text = "Sombras [ON]"
+			dynamicShadowsToggle.Text = "Shadows [ON]"
 			setToggleColor(dynamicShadowsToggle, false)
 		end
 	end)
@@ -1294,7 +1385,7 @@ end)
 			if localHum then pcall(function() camera.CameraSubject = localHum; camera.CameraType = Enum.CameraType.Custom end) end
 		end
 		viewPlayerAtivo = false
-		viewPlayerButton.Text = "👁️ View Player [OFF]"
+		viewPlayerButton.Text = "𓁻 View Player [OFF]"
 		setToggleColor(viewPlayerButton, false)
 		if viewConnection then safeDisconnect(viewConnection); viewConnection = nil end
 	end
@@ -1308,7 +1399,7 @@ end)
 		cameraBackupType = camera.CameraType
 		pcall(function() camera.CameraSubject = targetHumanoid; camera.CameraType = Enum.CameraType.Custom end)
 		viewPlayerAtivo = true
-		viewPlayerButton.Text = "👁️ View Player [ON]"
+		viewPlayerButton.Text = "𓁻 View Player [ON]"
 		setToggleColor(viewPlayerButton, true)
             -- Reconectar a câmera de view mesmo após a morte do alvo
 		viewConnection = RunService.RenderStepped:Connect(function()
