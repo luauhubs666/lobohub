@@ -19,9 +19,9 @@ local hubVisivel = false
 local espAtivo = false
 local noclipAtivo = false
 local clickTpAtivo = false
-local flingBodyAtivo = false
+local tornadoBodyAtivo = false
 local infiniteJumpAtivo = false
-local antiSitAtivo = false
+local AntiSitAtivo = false
 local espInstancias = {}
 local posicaoSalva = nil
 local colisoesSalvas = {}
@@ -29,7 +29,7 @@ local jogadorSelecionado = nil
 local conexaoClickTP = nil
 local noclipConnection = nil 
 local infiniteJumpConnection = nil
-local antiSitConnection = nil
+local AntiSitConnection = nil
 local HeartbeatConn = nil
 local SitChangedConn = nil
 local SeatedConn = nil
@@ -148,7 +148,7 @@ headerCorner.Parent = header
 	killGuiButton.Size = UDim2.new(0, 30, 0, 30)
 	killGuiButton.Position = UDim2.new(1, -35, 0, 5)
 	killGuiButton.AnchorPoint = Vector2.new(0, 0)
-	killGuiButton.Text = "✖️"
+	killGuiButton.Text = "✖"
 	killGuiButton.Font = Enum.Font.SourceSansBold
 	killGuiButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	killGuiButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
@@ -422,12 +422,12 @@ tabCorner.Parent = tabContainer
 	end
 
 -- Opções
-	local espToggle = makeFuncButton(pageParaMim, "ESP [OFF]", Color3.fromRGB(30, 30, 30))
-	local clickTPToggle = makeFuncButton(pageParaMim, "Click TP [OFF]", Color3.fromRGB(30, 30, 30))
-	local noclipToggle = makeFuncButton(pageParaMim, "Noclip [OFF]", Color3.fromRGB(30, 30, 30))
-	local infiniteJumpToggle = makeFuncButton(pageParaMim, "Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
-    local flingBodyToggle = makeFuncButton(pageParaMim,"🌪 Tornado [OFF]", Color3.fromRGB(30, 30, 30))
-    local antiSitToggle = makeFuncButton(pageProtecoes,"AntiSit [OFF]", Color3.fromRGB(30, 30, 30))
+	local espToggle = makeFuncButton(pageParaMim, "ꙮ ESP [OFF]", Color3.fromRGB(30, 30, 30))
+	local clickTPToggle = makeFuncButton(pageParaMim, "👆 Click TP [OFF]", Color3.fromRGB(30, 30, 30))
+	local noclipToggle = makeFuncButton(pageParaMim, "⿻ Noclip [OFF]", Color3.fromRGB(30, 30, 30))
+	local infiniteJumpToggle = makeFuncButton(pageParaMim, "♾️ Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
+    local tornadoBodyToggle = makeFuncButton(pageParaMim," 🌪Tornado [OFF]", Color3.fromRGB(30, 30, 30))
+    local AntiSitToggle = makeFuncButton(pageProtecoes,"🪑🚫 AntiSit [OFF]", Color3.fromRGB(30, 30, 30))
 	local dynamicShadowsToggle = makeFuncButton(pageClient, "Shadows [ON]", Color3.fromRGB(30, 30, 30))
 	
 	
@@ -490,9 +490,9 @@ tabCorner.Parent = tabContainer
 	speedValueCorner.CornerRadius = UDim.new(0,6)
 	speedValueCorner.Parent = speedValueBox
 
-	local tpToPlayerButton = makeFuncButton(pageFuncoes, " Go to Player")
-	local tpBackButton = makeFuncButton(pageFuncoes, "Come Back")
-	local viewPlayerButton = makeFuncButton(pageFuncoes, "View Player [OFF]")
+	local tpToPlayerButton = makeFuncButton(pageFuncoes, "➡️ Go to Player")
+	local tpBackButton = makeFuncButton(pageFuncoes, "⬅️ Come Back")
+	local viewPlayerButton = makeFuncButton(pageFuncoes, "🔍View Player [OFF]")
 	local killPlayerButton = makeFuncButton(pageFuncoes, "Kill Player", Color3.fromRGB(180,40,40))
     local killAllButton = makeFuncButton(pageFuncoes, "Kill All", Color3.fromRGB(100, 0, 0))
     local bringPlayerButton = makeFuncButton(pageFuncoes, "Bring Player", Color3.fromRGB(60, 100, 170))
@@ -847,7 +847,7 @@ tabCorner.Parent = tabContainer
     -- Lógica do noclip
 	noclipToggle.MouseButton1Click:Connect(function()
 		noclipAtivo = not noclipAtivo
-		local base = "🚫 Noclip"
+		local base = "⿻ Noclip"
 		noclipToggle.Text = base .. (noclipAtivo and " [ON]" or " [OFF]")
 		setToggleColor(noclipToggle, noclipAtivo)
 		local char = player.Character
@@ -883,7 +883,7 @@ tabCorner.Parent = tabContainer
 	-- Lógica do infinite jump
 	infiniteJumpToggle.MouseButton1Click:Connect(function()
 		infiniteJumpAtivo = not infiniteJumpAtivo
-		infiniteJumpToggle.Text = "🦘 Pulo Infinito " .. (infiniteJumpAtivo and "[ON]" or "[OFF]")
+		infiniteJumpToggle.Text = "𖤂 Pulo Infinito " .. (infiniteJumpAtivo and "[ON]" or "[OFF]")
 		setToggleColor(infiniteJumpToggle, infiniteJumpAtivo)
 
 		if infiniteJumpAtivo then
@@ -900,13 +900,13 @@ tabCorner.Parent = tabContainer
 		end
 	end)
 	
--- Lógica do antisit	
-antiSitToggle.MouseButton1Click:Connect(function()
-	antiSitAtivo = not antiSitAtivo
-	antiSitToggle.Text = "AntiSit " .. (antiSitAtivo and "[ON]" or "[OFF]")
-	setToggleColor(antiSitToggle, antiSitAtivo)
+-- Lógica do AntiSit	
+AntiSitToggle.MouseButton1Click:Connect(function()
+	AntiSitAtivo = not AntiSitAtivo
+	AntiSitToggle.Text = "🪑🚫 AntiSit " .. (AntiSitAtivo and "[ON]" or "[OFF]")
+	setToggleColor(AntiSitToggle, AntiSitAtivo)
 
-	if antiSitAtivo then
+	if AntiSitAtivo then
 		
 		local Player = Players.LocalPlayer
 
@@ -968,7 +968,7 @@ antiSitToggle.MouseButton1Click:Connect(function()
 		CharAddedConn = Player.CharacterAdded:Connect(setupAntiSit)
 		trackConnection(CharAddedConn)
 		
-	else -- Desconecta e reverte o antisit
+	else -- Desconecta e reverte o AntiSit
 		
 		-- Desconecta todas as conexões do AntiSit
 		if HeartbeatConn then safeDisconnect(HeartbeatConn) HeartbeatConn = nil end
@@ -994,14 +994,15 @@ antiSitToggle.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Lógica do botão 🌪 Tornado
-local flingMotorConnection = nil
-local flingRotateConnection = nil
-local flingAnimationConnection = nil
+-- Lógica do botão Tornado 🌪
+local tornadoMotorConnection = nil
+local tornadoRotateConnection = nil
+local tornadoAnimationConnection = nil
 local animatorBlockConnection = nil
 local descendantBlockConnection = nil
 local originalMotor6DTransforms = {}
 local originalAnimator = nil
+
 
 -- Parar animações
 local function stopAllAnimations(humanoid)
@@ -1093,15 +1094,15 @@ local function restoreAnimations(humanoid, character)
 	stopAllAnimations(humanoid)
 end
 
-local function startFlingMode()
+local function startTornadoMode()
 	local char = player.Character
 	local hum = char and char:FindFirstChildOfClass("Humanoid")
 	local root = char and char:FindFirstChild("HumanoidRootPart")
 
 	if not hum or not root then
-		flingBodyAtivo = false
-		flingBodyToggle.Text = "🌪 Tornado [OFF]"
-		setToggleColor(flingBodyToggle, false)
+		tornadoBodyAtivo = false
+		tornadoBodyToggle.Text = "🌪 Tornado [OFF]"
+		setToggleColor(tornadoBodyToggle, false)
 		return
 	end
 
@@ -1117,13 +1118,13 @@ local function startFlingMode()
 	stopAllAnimations(hum)
 	forceIdlePose(char)
 
-	if flingMotorConnection then safeDisconnect(flingMotorConnection) end
-	flingMotorConnection = RunService.RenderStepped:Connect(function()
+	if tornadoMotorConnection then safeDisconnect(tornadoMotorConnection) end
+	tornadoMotorConnection = RunService.RenderStepped:Connect(function()
 		if root and root.Parent then
 			root.CFrame = CFrame.new(root.Position) * root.CFrame.Rotation * CFrame. Angles(0, math. rad(300), 0)
 		end
 	end)
-	trackConnection(flingMotorConnection)
+	trackConnection(tornadoMotorConnection)
 
 	-- Pegando o couch uma única vez
 	task.spawn(function()
@@ -1140,12 +1141,12 @@ local function startFlingMode()
 	end)
 end
 
-local function stopFlingMode()
+local function stopTornadoMode()
 	sofaRunning = false
 
-	if flingMotorConnection then safeDisconnect(flingMotorConnection); flingMotorConnection = nil end
-	if flingRotateConnection then safeDisconnect(flingRotateConnection); flingRotateConnection = nil end
-	if flingAnimationConnection then safeDisconnect(flingAnimationConnection); flingAnimationConnection = nil end
+	if tornadoMotorConnection then safeDisconnect(tornadoMotorConnection); tornadoMotorConnection = nil end
+	if tornadoRotateConnection then safeDisconnect(tornadoRotateConnection); tornadoRotateConnection = nil end
+	if tornadoAnimationConnection then safeDisconnect(tornadoAnimationConnection); tornadoAnimationConnection = nil end
 	if animatorBlockConnection then safeDisconnect(animatorBlockConnection); animatorBlockConnection = nil end
 	if descendantBlockConnection then safeDisconnect(descendantBlockConnection); descendantBlockConnection = nil end
 
@@ -1168,17 +1169,17 @@ local function stopFlingMode()
 	end
 end
 
-flingBodyToggle.MouseButton1Click:Connect(function()
-	flingBodyAtivo = not flingBodyAtivo
+tornadoBodyToggle.MouseButton1Click:Connect(function()
+	tornadoBodyAtivo = not tornadoBodyAtivo
 	local base = "🌪 Tornado"
 
-	flingBodyToggle.Text = base .. (flingBodyAtivo and " [ON]" or " [OFF]")
-	setToggleColor(flingBodyToggle, flingBodyAtivo)
+	tornadoBodyToggle.Text = base .. (tornadoBodyAtivo and " [ON]" or " [OFF]")
+	setToggleColor(tornadoBodyToggle, tornadoBodyAtivo)
 
-	if flingBodyAtivo then
-		startFlingMode()
+	if tornadoBodyAtivo then
+		startTornadoMode()
 	else
-		stopFlingMode()
+		stopTornadoMode()
 	end
 end)
 
@@ -1385,7 +1386,7 @@ end)
 			if localHum then pcall(function() camera.CameraSubject = localHum; camera.CameraType = Enum.CameraType.Custom end) end
 		end
 		viewPlayerAtivo = false
-		viewPlayerButton.Text = "𓁻 View Player [OFF]"
+		viewPlayerButton.Text = "🔍 View Player [OFF]"
 		setToggleColor(viewPlayerButton, false)
 		if viewConnection then safeDisconnect(viewConnection); viewConnection = nil end
 	end
@@ -1399,7 +1400,7 @@ end)
 		cameraBackupType = camera.CameraType
 		pcall(function() camera.CameraSubject = targetHumanoid; camera.CameraType = Enum.CameraType.Custom end)
 		viewPlayerAtivo = true
-		viewPlayerButton.Text = "𓁻 View Player [ON]"
+		viewPlayerButton.Text = "🔍 View Player [ON]"
 		setToggleColor(viewPlayerButton, true)
             -- Reconectar a câmera de view mesmo após a morte do alvo
 		viewConnection = RunService.RenderStepped:Connect(function()
@@ -2004,7 +2005,7 @@ end)
 		if debugConnection then safeDisconnect(debugConnection); debugConnection = nil end    
 		if espConnection then safeDisconnect(espConnection); espConnection = nil end    
 		if infiniteJumpConnection then safeDisconnect(infiniteJumpConnection); infiniteJumpConnection = nil end
-		if antiSitConnection then safeDisconnect(antiSitConnection); antiSitConnection = nil end
+		if AntiSitConnection then safeDisconnect(AntiSitConnection); AntiSitConnection = nil end
 
 		limparESP()    
 
