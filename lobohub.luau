@@ -425,8 +425,9 @@ tabCorner.Parent = tabContainer
 	local espToggle = makeFuncButton(pageParaMim, "ꙮ ESP [OFF]", Color3.fromRGB(30, 30, 30))
 	local clickTPToggle = makeFuncButton(pageParaMim, "👆 Click TP [OFF]", Color3.fromRGB(30, 30, 30))
 	local noclipToggle = makeFuncButton(pageParaMim, "⿻ Noclip [OFF]", Color3.fromRGB(30, 30, 30))
-	local infiniteJumpToggle = makeFuncButton(pageParaMim, "♾️ Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
-    local tornadoBodyToggle = makeFuncButton(pageParaMim," 🌪Tornado [OFF]", Color3.fromRGB(30, 30, 30))
+	local infiniteJumpToggle = makeFuncButton(pageParaMim, "∞ Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
+    local tornadoBodyToggle = makeFuncButton(pageParaMim," 🌪Tornado [BETA]", Color3.fromRGB(30, 30, 30))
+    local puxarPartsToggle = makeFuncButton(pageParaMim,"🌀 Redemoíno", Color3.fromRGB(30, 30, 30))
     local AntiSitToggle = makeFuncButton(pageProtecoes,"🪑🚫 AntiSit [OFF]", Color3.fromRGB(30, 30, 30))
 	local dynamicShadowsToggle = makeFuncButton(pageClient, "Shadows [ON]", Color3.fromRGB(30, 30, 30))
 	
@@ -1961,6 +1962,212 @@ end
 
 -- Limpeza final
 spin:Disconnect()
+end)
+
+puxarPartsToggle.MouseButton1Click:Connect(function()
+    -- BlackHole Player
+
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local LocalPlayer = Players.LocalPlayer
+    local Workspace = game:GetService("Workspace")
+
+    local angle = 0
+    local radius = 1 -- Distância do jogador FIXA em 1
+    local angleSpeed = 50 -- Velocidade FIXA em 50
+    local blackHoleActive = false
+    local targetName = "" 
+    local puxarPartsActive = false
+
+    -- Cria a pasta e o ponto de atração
+    local Folder = Instance.new("Folder", Workspace)
+    Folder.Name = "InternalShredderLogic"
+    local Part = Instance.new("Part", Folder)
+    local Attachment1 = Instance.new("Attachment", Part)
+    Part.Anchored = true
+    Part.CanCollide = false
+    Part.Transparency = 1
+    Part.Name = "AttractorPoint"
+
+    -- Função pra achar o player pelo nome
+    local function getTarget()
+        if targetName == "" then return nil end
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer then 
+                if string.sub(p.Name:lower(), 1, #targetName) == targetName:lower() or 
+                   string.sub(p.DisplayName:lower(), 1, #targetName) == targetName:lower() then
+                    return p
+                end
+            end
+        end
+        return nil
+    end
+
+    -- Configuração de Rede (Bypass de simulação)
+    if not getgenv().Network then
+        getgenv().Network = {
+            BaseParts = {},
+            Velocity = Vector3.new(14.46262424, 14.46262424, 14.46262424)
+        }
+
+        Network.RetainPart = function(part)
+            if typeof(part) == "Instance" and part:IsA("BasePart") and part:IsDescendantOf(Workspace) then
+                table.insert(Network.BaseParts, part)
+                part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+                part.CanCollide = false
+            end
+        end
+
+        local function EnablePartControl()
+            LocalPlayer.ReplicationFocus = Workspace
+            RunService.Heartbeat:Connect(function()
+                sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
+                for _, part in pairs(Network.BaseParts) do
+                    if part:IsDescendantOf(Workspace) then
+                        part.Velocity = Network.Velocity
+                    end
+                end
+            end)
+        end
+        EnablePartControl()
+    end
+
+    -- Função que aplica a física nas peças (Agora mais agressiva)
+    local function ForcePart(v)
+        if v:IsA("Part") and not v.Anchored and not v.Parent:FindFirstChild("Humanoid") and not v.Parent:FindFirstChild("Head") and v.Name ~= "Handle" then
+            for _, x in next, v:GetChildren() do
+                if x:IsA("BodyAngularVelocity") or x:IsA("BodyForce") or x:IsA("BodyGyro") or x:IsA("BodyPosition") or x:IsA("BodyThrust") or x:IsA("BodyVelocity") or x:IsA("RocketPropulsion") then
+                    x:Destroy()
+                end
+            end
+            if v:FindFirstChild("Attachment") then v:FindFirstChild("Attachment"):Destroy() end
+            if v:FindFirstChild("AlignPosition") then v:FindFirstChild("AlignPosition"):Destroy() end
+            if v:FindFirstChild("Torque") then v:FindFirstChild("Torque"):Destroy() end
+            
+            v.CanCollide = false
+            
+            local Torque = Instance.new("Torque", v)
+            Torque.Torque = Vector3.new(1000000, 1000000, 1000000)
+            local AlignPosition = Instance.new("AlignPosition", v)
+            local Attachment2 = Instance.new("Attachment", v)
+            Torque.Attachment0 = Attachment2
+            AlignPosition.MaxForce = math.huge
+            AlignPosition.MaxVelocity = math.huge
+            -- AUMENTADO PRA 500: Isso faz a part grudar instantaneamente onde o ponto estiver
+            AlignPosition.Responsiveness = 500 
+            AlignPosition.Attachment0 = Attachment2
+            AlignPosition.Attachment1 = Attachment1
+        end
+    end
+
+    -- Ativa puxarParts (aplica ForcePart nas peças existentes e conecta DescendantAdded)
+    local currentConnection
+    local function activatePuxarParts()
+        puxarPartsActive = true
+
+        for _, v in next, Workspace:GetDescendants() do
+            ForcePart(v)
+        end
+
+        -- conecta novos objetos enquanto puxarPartsActive for true
+        if currentConnection then
+            currentConnection:Disconnect()
+            currentConnection = nil
+        end
+        currentConnection = Workspace.DescendantAdded:Connect(function(v)
+            if puxarPartsActive then
+                ForcePart(v)
+            end
+        end)
+    end
+
+    -- Desativa puxarParts (afasta o Attachment1 e impede aplicar ForcePart em novos objetos)
+    local function deactivatePuxarParts()
+        puxarPartsActive = false
+        if currentConnection then
+            currentConnection:Disconnect()
+            currentConnection = nil
+        end
+        Attachment1.WorldCFrame = CFrame.new(0, -1000, 0)
+    end
+
+    -- Função principal de controle
+    local function toggleBlackHole()
+        blackHoleActive = not blackHoleActive
+        
+        if blackHoleActive then
+            -- liga inicialmente
+            activatePuxarParts()
+
+            -- ciclo que desliga e religa o puxarParts a cada 15s enquanto o triturador estiver ligado
+            task.spawn(function()
+                while blackHoleActive do
+                    task.wait(15)
+                    if not blackHoleActive then break end
+                    -- desativa puxarParts (isso não deve re-ligar automaticamente se você desligar pelo botão)
+                    deactivatePuxarParts()
+                    task.wait(0.1)
+                    if not blackHoleActive then break end
+                    activatePuxarParts()
+                end
+            end)
+
+            -- loop que move o Attachment1 apenas enquanto puxarPartsActive estiver true
+            task.spawn(function()
+                while blackHoleActive do
+                    RunService.RenderStepped:Wait()
+                    if puxarPartsActive then
+                        -- Aumenta o ângulo mais rápido pra vibrar mais
+                        angle = angle + math.rad(angleSpeed * 2)
+
+                        local target = getTarget()
+                        local centerCFrame = CFrame.new(0, -100, 0)
+                        
+                        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                            centerCFrame = target.Character.HumanoidRootPart.CFrame
+                        elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and targetName == "" then
+                            centerCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                        end
+
+                        -- MÁGICA DO "BATE E VOLTA":
+                        local violentX = math.sin(angle) * radius
+                        local violentY = math.cos(angle * 2.5) * (radius * 0.5)
+                        local violentZ = math.sin(angle * 1.5) * radius
+
+                        Attachment1.WorldCFrame = centerCFrame * CFrame.new(violentX, violentY, violentZ)
+                    else
+                        -- quando puxarParts está desativado, afasta o ponto de atração
+                        Attachment1.WorldCFrame = CFrame.new(0, -1000, 0)
+                    end
+                end
+                -- ao sair, garantir que o ponto esteja afastado
+                Attachment1.WorldCFrame = CFrame.new(0, -1000, 0)
+            end)
+        else
+            -- desligou pelo botão: parar tudo e não permitir religações automáticas
+            deactivatePuxarParts()
+            blackHoleActive = false
+        end
+    end
+
+    -- Interface Gráfica (UI)
+    local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/miroeramaa/TurtleLib/main/TurtleUiLib.lua"))()
+    local window = library:Window("Triturador de Alvo")
+
+    window:Box("Nome do Alvo", function(text, focuslost)
+        if focuslost then
+            targetName = text
+            print("Alvo definido para: " .. targetName)
+        end
+    end)
+
+    -- Sliders removidos conforme solicitado
+
+    window:Toggle("Ligar Triturador", false, function(Value)
+        if Value ~= blackHoleActive then
+            toggleBlackHole()
+        end
+    end)
 end)
 
 	local function killAllHub()
