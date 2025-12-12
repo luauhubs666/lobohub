@@ -95,7 +95,7 @@ local function iniciarHub()
 
 	local toggleBotao = Instance.new("ImageButton")
 	toggleBotao.Name = "ToggleBotao"
-	toggleBotao.Image = "rbxassetid://9163518958" -- ID da imagem do toggle
+	toggleBotao.Image = "rbxassetid://99792331635156" -- ID da imagem do toggle
 	toggleBotao.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	toggleBotao.Size = UDim2.new(0, 50, 0, 50)
 	toggleBotao.Position = UDim2.new(0, 10, 0.5, -25)
@@ -745,7 +745,7 @@ tabCorner.Parent = tabContainer
 		if playerList.Visible then atualizarListaJogadores() end
 		if jogadorSelecionado and removed == jogadorSelecionado then
 			jogadorSelecionado = nil
-			playerSelectButton.Text = "𖠋𖨆 Selecionar Jogador..."
+			playerSelectButton.Text = "👥️ Selecionar Jogador..."
 			if viewPlayerAtivo and type(desligarViewPlayer) == "function" then desligarViewPlayer() end
 		end
 	end)
@@ -884,7 +884,7 @@ tabCorner.Parent = tabContainer
 	-- Lógica do infinite jump
 	infiniteJumpToggle.MouseButton1Click:Connect(function()
 		infiniteJumpAtivo = not infiniteJumpAtivo
-		infiniteJumpToggle.Text = "𖤂 Pulo Infinito " .. (infiniteJumpAtivo and "[ON]" or "[OFF]")
+		infiniteJumpToggle.Text = "∞ Pulo Infinito " .. (infiniteJumpAtivo and "[ON]" or "[OFF]")
 		setToggleColor(infiniteJumpToggle, infiniteJumpAtivo)
 
 		if infiniteJumpAtivo then
