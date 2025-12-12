@@ -426,7 +426,7 @@ tabCorner.Parent = tabContainer
 	local clickTPToggle = makeFuncButton(pageParaMim, "👆 Click TP [OFF]", Color3.fromRGB(30, 30, 30))
 	local noclipToggle = makeFuncButton(pageParaMim, "⿻ Noclip [OFF]", Color3.fromRGB(30, 30, 30))
 	local infiniteJumpToggle = makeFuncButton(pageParaMim, "∞ Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
-    local tornadoBodyToggle = makeFuncButton(pageParaMim," 🌪Tornado [BETA]", Color3.fromRGB(30, 30, 30))
+    local tornadoBodyToggle = makeFuncButton(pageParaMim," 🌪Tornado [OFF]", Color3.fromRGB(30, 30, 30))
     local puxarPartsToggle = makeFuncButton(pageParaMim,"🌀 Redemoíno", Color3.fromRGB(30, 30, 30))
     local AntiSitToggle = makeFuncButton(pageProtecoes,"🪑🚫 AntiSit [OFF]", Color3.fromRGB(30, 30, 30))
 	local dynamicShadowsToggle = makeFuncButton(pageClient, "Shadows [ON]", Color3.fromRGB(30, 30, 30))
@@ -995,15 +995,37 @@ AntiSitToggle.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Lógica do botão Tornado 🌪
-local tornadoMotorConnection = nil
-local tornadoRotateConnection = nil
-local tornadoAnimationConnection = nil
+-- Lógica do botão 🌪 Tornado
+
+-- Dependências e Configurações (Essenciais para o funcionamento do código)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local player = LocalPlayer -- Usado nas funções originais
+
+-- Variáveis de Estado (Preservadas)
+local originalAnimator = nil
+local originalMotor6DTransforms = {}
 local animatorBlockConnection = nil
 local descendantBlockConnection = nil
-local originalMotor6DTransforms = {}
-local originalAnimator = nil
+local tornadoMotorConnection = nil
+local sofaRunning = false
+local tornadoBodyAtivo = false
 
+-- Variáveis da Lógica do Furacão/Blackhole
+local furacaoActive = false
+local furacaoAngle = 1
+local furacaoRadius = 10 
+local furacaoAngleSpeed = 2 
+local furacaoAttachment1 = nil
+local furacaoFolder = nil
+local furacaoHRP = nil
+local furacaoAttach = nil
+local furacaoLoop = nil
+local furacaoDescendantConn = nil
+
+local blackHoleUI = nil -- Variável para a janela da UI do Blackhole
 
 -- Parar animações
 local function stopAllAnimations(humanoid)
@@ -1021,7 +1043,7 @@ local function blockAnimator(humanoid)
 	end
 
 	if animatorBlockConnection then safeDisconnect(animatorBlockConnection) end
-	animatorBlockConnection = humanoid. ChildAdded:Connect(function(child)
+	animatorBlockConnection = humanoid.ChildAdded:Connect(function(child)
 		if child:IsA("Animator") then
 			pcall(function() child:Destroy() end)
 		end
@@ -1033,7 +1055,7 @@ end
 local function saveOriginalAnimator(humanoid)
 	for _, child in ipairs(humanoid:GetChildren()) do
 		if child:IsA("Animator") then
-			originalAnimator = child: Clone()
+			originalAnimator = child:Clone()
 			break
 		end
 	end
@@ -1044,14 +1066,14 @@ local function saveOriginalTransforms(character)
 	originalMotor6DTransforms = {}
 	for _, part in ipairs(character:GetDescendants()) do
 		if part:IsA("Motor6D") then
-			originalMotor6DTransforms[part] = part. Transform
+			originalMotor6DTransforms[part] = part.Transform
 		end
 	end
 end
 
 -- Congelar postura
 local function forceIdlePose(character)
-	for _, part in ipairs(character: GetDescendants()) do
+	for _, part in ipairs(character:GetDescendants()) do
 		if part:IsA("Motor6D") then
 			pcall(function()
 				part.Transform = CFrame.new()
@@ -1095,15 +1117,180 @@ local function restoreAnimations(humanoid, character)
 	stopAllAnimations(humanoid)
 end
 
+-- ============================
+-- Lógica de Atração (Furacão/Blackhole)
+-- ============================
+
+-- Bypass de Network (Para simulação de partes)
+local function setupNetworkBypass()
+	if not getgenv().Network then
+		getgenv().Network = {
+			BaseParts = {},
+			Velocity = Vector3.new(14.46262424, 14.46262424, 14.46262424)
+		}
+
+		Network.RetainPart = function(part)
+			if typeof(part) == "Instance" and part:IsA("BasePart") and part:IsDescendantOf(Workspace) then
+				table.insert(Network.BaseParts, part)
+				part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+				part.CanCollide = false
+			end
+		end
+
+		local function EnablePartControl()
+			Players.LocalPlayer.ReplicationFocus = Workspace
+			RunService.Heartbeat:Connect(function()
+				sethiddenproperty(Players.LocalPlayer, "SimulationRadius", math.huge)
+				for _, part in pairs(Network.BaseParts) do
+					if part:IsDescendantOf(Workspace) then
+						part.Velocity = Network.Velocity
+					end
+				end
+			end)
+		end
+
+		pcall(EnablePartControl)
+	end
+end
+
+local function setupFuracao()
+	if furacaoFolder then safeDestroy(furacaoFolder) end
+
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+	furacaoFolder = Instance.new("Folder", Workspace)
+	furacaoFolder.Name = "furacaoLogic"
+
+	local Part = Instance.new("Part", furacaoFolder)
+	furacaoAttachment1 = Instance.new("Attachment", Part)
+	Part.Anchored = true
+	Part.CanCollide = false
+	Part.Transparency = 1
+	
+	return humanoidRootPart, furacaoAttachment1
+end
+
+local function ForcePartFuracao(v, attachmentPoint)
+	if v:IsA("Part") and not v.Anchored and not v.Parent:FindFirstChild("Humanoid") and not v.Parent:FindFirstChild("Head") and v.Name ~= "Handle" then
+		for _, x in next, v:GetChildren() do
+			if x:IsA("BodyAngularVelocity") or x:IsA("BodyForce") or x:IsA("BodyGyro") or x:IsA("BodyPosition") or x:IsA("BodyThrust") or x:IsA("BodyVelocity") or x:IsA("RocketPropulsion") then
+				x:Destroy()
+			end
+		end
+		if v:FindFirstChild("Attachment") then v:FindFirstChild("Attachment"):Destroy() end
+		if v:FindFirstChild("AlignPosition") then v:FindFirstChild("AlignPosition"):Destroy() end
+		if v:FindFirstChild("Torque") then v:FindFirstChild("Torque"):Destroy() end
+		
+		v.CanCollide = false
+		
+		local Torque = Instance.new("Torque", v)
+		Torque.Torque = Vector3.new(1000000, 1000000, 1000000)
+		local AlignPosition = Instance.new("AlignPosition", v)
+		local Attachment2 = Instance.new("Attachment", v)
+		Torque.Attachment0 = Attachment2
+		AlignPosition.MaxForce = math.huge
+		AlignPosition.MaxVelocity = math.huge
+		AlignPosition.Responsiveness = 500
+		AlignPosition.Attachment0 = Attachment2
+		AlignPosition.Attachment1 = attachmentPoint
+	end
+end
+
+local function startFuracaoLogic()
+	furacaoActive = true
+	
+	if furacaoLoop then safeDisconnect(furacaoLoop); furacaoLoop = nil end
+	if furacaoDescendantConn then safeDisconnect(furacaoDescendantConn); furacaoDescendantConn = nil end
+	
+	furacaoHRP, furacaoAttach = setupFuracao()
+
+	-- Altera a atração para pegar uma área muito grande (infinitamente, ou seja, math.huge de SimulationRadius)
+	-- E atrai *todos* os Descendants do Workspace
+	for _, v in next, Workspace:GetDescendants() do
+		ForcePartFuracao(v, furacaoAttach)
+	end
+	
+	furacaoDescendantConn = Workspace.DescendantAdded:Connect(function(v)
+		if furacaoActive and furacaoAttach then
+			ForcePartFuracao(v, furacaoAttach)
+		end
+	end)
+	trackConnection(furacaoDescendantConn)
+
+	furacaoLoop = RunService.RenderStepped:Connect(function()
+		if not furacaoActive or not furacaoHRP or not furacaoAttach then
+			safeDisconnect(furacaoLoop); return
+		end
+		
+		furacaoAngle = furacaoAngle + math.rad(furacaoAngleSpeed)
+
+		local offsetX = math.cos(furacaoAngle) * furacaoRadius
+		local offsetZ = math.sin(furacaoAngle) * furacaoRadius
+
+		-- Furacão no seu humanoid:
+		furacaoAttach.WorldCFrame = furacaoHRP.CFrame * CFrame.new(offsetX, 0, offsetZ)
+	end)
+	trackConnection(furacaoLoop)
+end
+
+local function stopFuracaoLogic()
+	furacaoActive = false
+	
+	if furacaoLoop then safeDisconnect(furacaoLoop); furacaoLoop = nil end
+	if furacaoDescendantConn then safeDisconnect(furacaoDescendantConn); furacaoDescendantConn = nil end
+	
+	if furacaoAttach then
+		-- Move o ponto de atração para longe para garantir a desativação da força
+		furacaoAttach.WorldCFrame = CFrame.new(0, -1000, 0)
+	end
+	if furacaoFolder then safeDestroy(furacaoFolder); furacaoFolder = nil end
+end
+
+-- ============================
+-- Lógica da UI (TurtleLib)
+-- ============================
+
+local function spawnBlackHoleUI()
+    local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/miroeramaa/TurtleLib/main/TurtleUiLib.lua"))()
+    local window = library:Window("Projeto LKB")
+    blackHoleUI = window.Parent -- Salva o ScreenGui (ou o container da janela)
+
+    window:Slider("Radius Blackhole",1,100,10, function(Value)
+       furacaoRadius = Value
+    end)
+
+    -- Toggle da atração. Se o botão principal for desligado, esta UI e o Blackhole são mortos.
+    window:Toggle("Blackhole", true, function(Value)
+           if Value then
+                startFuracaoLogic()
+            else
+                stopFuracaoLogic()
+            end
+    end)
+    
+    -- Inicia o Blackhole imediatamente quando a UI é spawnada.
+    startFuracaoLogic()
+end
+
+local function destroyBlackHoleUI()
+    if blackHoleUI then
+        safeDestroy(blackHoleUI)
+        blackHoleUI = nil
+    end
+end
+
+
+-- ============================
+-- Lógica do Tornado (Rotação/Postura) - CONTROLE PRINCIPAL
+-- ============================
+
 local function startTornadoMode()
 	local char = player.Character
 	local hum = char and char:FindFirstChildOfClass("Humanoid")
 	local root = char and char:FindFirstChild("HumanoidRootPart")
 
 	if not hum or not root then
-		tornadoBodyAtivo = false
-		tornadoBodyToggle.Text = "🌪 Tornado [OFF]"
-		setToggleColor(tornadoBodyToggle, false)
 		return
 	end
 
@@ -1113,7 +1300,7 @@ local function startTornadoMode()
 	saveOriginalTransforms(char)
 
 	hum.AutoRotate = false
-	hum: ChangeState(Enum.HumanoidStateType.Running)
+	hum:ChangeState(Enum.HumanoidStateType.Running)
 
 	blockAnimator(hum)
 	stopAllAnimations(hum)
@@ -1122,32 +1309,19 @@ local function startTornadoMode()
 	if tornadoMotorConnection then safeDisconnect(tornadoMotorConnection) end
 	tornadoMotorConnection = RunService.RenderStepped:Connect(function()
 		if root and root.Parent then
-			root.CFrame = CFrame.new(root.Position) * root.CFrame.Rotation * CFrame. Angles(0, math. rad(300), 0)
+			-- Rotação de 300 graus por segundo
+			root.CFrame = CFrame.new(root.Position) * root.CFrame.Rotation * CFrame.Angles(0, math.rad(300), 0)
 		end
 	end)
 	trackConnection(tornadoMotorConnection)
 
-	-- Pegando o couch uma única vez
-	task.spawn(function()
-		pcall(function()
-			game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
-		end)
-
-		task.wait(0.1)
-
-		local couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
-		if couchTool and hum then
-			hum:EquipTool(couchTool)
-		end
-	end)
+	spawnBlackHoleUI() -- Ligar UI e Atração (que chama startFuracaoLogic)
 end
 
 local function stopTornadoMode()
 	sofaRunning = false
 
 	if tornadoMotorConnection then safeDisconnect(tornadoMotorConnection); tornadoMotorConnection = nil end
-	if tornadoRotateConnection then safeDisconnect(tornadoRotateConnection); tornadoRotateConnection = nil end
-	if tornadoAnimationConnection then safeDisconnect(tornadoAnimationConnection); tornadoAnimationConnection = nil end
 	if animatorBlockConnection then safeDisconnect(animatorBlockConnection); animatorBlockConnection = nil end
 	if descendantBlockConnection then safeDisconnect(descendantBlockConnection); descendantBlockConnection = nil end
 
@@ -1157,18 +1331,16 @@ local function stopTornadoMode()
 	if hum and char then
 		restoreAnimations(hum, char)
 		hum.AutoRotate = true
-		hum:ChangeState(Enum.HumanoidStateType. Running)
+		hum:ChangeState(Enum.HumanoidStateType.Running)
 	end
-
-	if hum then hum:UnequipTools() end
-
-	for _, obj in {char, player. Backpack, player:FindFirstChild("StarterGear")} do
-		if obj then
-			local c = obj: FindFirstChild("Couch")
-			if c then c:Destroy() end
-		end
-	end
+	
+	stopFuracaoLogic()  -- Desligar Atração (Blackhole)
+	destroyBlackHoleUI() -- Matar UI do Blackhole
 end
+
+-- ============================
+-- Conexão Principal do Toggle
+-- ============================
 
 tornadoBodyToggle.MouseButton1Click:Connect(function()
 	tornadoBodyAtivo = not tornadoBodyAtivo
@@ -1178,11 +1350,12 @@ tornadoBodyToggle.MouseButton1Click:Connect(function()
 	setToggleColor(tornadoBodyToggle, tornadoBodyAtivo)
 
 	if tornadoBodyAtivo then
-		startTornadoMode()
+		startTornadoMode() 
 	else
-		stopTornadoMode()
+		stopTornadoMode() 
 	end
 end)
+
 
 	speedValueBox:GetPropertyChangedSignal("Text"):Connect(function()
 		applySpeedValue()
@@ -1732,7 +1905,10 @@ killPlayerButton.MouseButton1Click:Connect(function()
     -- Espera o alvo sentar
     while task.wait() do
         if not targetRoot.Parent or not targetHum.Parent then break end
-        root.CFrame = targetRoot.CFrame * CFrame.new(1, -4, 0)
+        
+        local yOffset = tornadoBodyAtivo and 4 or -4 -- A verificação do Tornado está aqui
+        root.CFrame = targetRoot.CFrame * CFrame.new(1, yOffset, 0)
+        
         root.Velocity = Vector3.new(0,0,0)
 
         if targetHum.Sit then
