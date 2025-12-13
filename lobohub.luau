@@ -995,20 +995,17 @@ AntiSitToggle.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Lógica do botão 🌪 Tornado
+-- Lógica do botão 🌪 Tornado (FINAL - KillGui Integrado)
 
--- Dependências e Configurações (Essenciais para o funcionamento do código)
+-- Dependências e Configurações
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui") -- Necessário para apagar a UI
 local LocalPlayer = Players.LocalPlayer
-local player = LocalPlayer -- Usado nas funções originais
+local player = LocalPlayer
 
--- Variáveis de Estado (Preservadas)
-local originalAnimator = nil
-local originalMotor6DTransforms = {}
-local animatorBlockConnection = nil
-local descendantBlockConnection = nil
+-- Variáveis de Estado
 local tornadoMotorConnection = nil
 local sofaRunning = false
 local tornadoBodyAtivo = false
@@ -1025,103 +1022,32 @@ local furacaoAttach = nil
 local furacaoLoop = nil
 local furacaoDescendantConn = nil
 
-local blackHoleUI = nil -- Variável para a janela da UI do Blackhole
+local blackHoleUI = nil -- Referência para a UI
+local tornadoSpinSpeed = 50 -- Velocidade padrão
 
--- Parar animações
-local function stopAllAnimations(humanoid)
-	for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
-		pcall(function() track:Stop() end)
-	end
+-- ============================
+-- Funções Auxiliares (Segurança)
+-- ============================
+local function safeDisconnect(connection)
+    if connection and connection.Connected then
+        connection:Disconnect()
+    end
 end
 
--- Bloquear Animator
-local function blockAnimator(humanoid)
-	for _, child in ipairs(humanoid:GetChildren()) do
-		if child:IsA("Animator") then
-			pcall(function() child:Destroy() end)
-		end
-	end
-
-	if animatorBlockConnection then safeDisconnect(animatorBlockConnection) end
-	animatorBlockConnection = humanoid.ChildAdded:Connect(function(child)
-		if child:IsA("Animator") then
-			pcall(function() child:Destroy() end)
-		end
-	end)
-	trackConnection(animatorBlockConnection)
+local function safeDestroy(instance)
+    if instance and instance.Parent then
+        instance:Destroy()
+    end
 end
 
--- Salvar Animator original
-local function saveOriginalAnimator(humanoid)
-	for _, child in ipairs(humanoid:GetChildren()) do
-		if child:IsA("Animator") then
-			originalAnimator = child:Clone()
-			break
-		end
-	end
-end
-
--- Salvar transforms originais
-local function saveOriginalTransforms(character)
-	originalMotor6DTransforms = {}
-	for _, part in ipairs(character:GetDescendants()) do
-		if part:IsA("Motor6D") then
-			originalMotor6DTransforms[part] = part.Transform
-		end
-	end
-end
-
--- Congelar postura
-local function forceIdlePose(character)
-	for _, part in ipairs(character:GetDescendants()) do
-		if part:IsA("Motor6D") then
-			pcall(function()
-				part.Transform = CFrame.new()
-			end)
-		end
-	end
-
-	if descendantBlockConnection then safeDisconnect(descendantBlockConnection) end
-	descendantBlockConnection = character.DescendantAdded:Connect(function(part)
-		if part:IsA("Motor6D") then
-			pcall(function()
-				part.Transform = CFrame.new()
-			end)
-		end
-	end)
-	trackConnection(descendantBlockConnection)
-end
-
--- Restaurar animações e postura
-local function restoreAnimations(humanoid, character)
-	-- Recriar Animator
-	if originalAnimator then
-		pcall(function()
-			local newAnimator = originalAnimator:Clone()
-			newAnimator.Parent = humanoid
-		end)
-	end
-	
-	-- Restaurar Motors6D
-	for _, part in ipairs(character:GetDescendants()) do
-		if part:IsA("Motor6D") then
-			pcall(function()
-				if originalMotor6DTransforms[part] then
-					part.Transform = originalMotor6DTransforms[part]
-				end
-			end)
-		end
-	end
-	
-	task.wait(0.1)
-	stopAllAnimations(humanoid)
+local function trackConnection(connection)
+    -- Placeholder para gerenciador de conexões do seu script principal, se houver.
 end
 
 -- ============================
 -- Lógica de Atração (Furacão/Blackhole)
 -- ============================
 
--- Bypass de Network (Para simulação de partes)
 local function setupNetworkBypass()
 	if not getgenv().Network then
 		getgenv().Network = {
@@ -1197,16 +1123,35 @@ local function ForcePartFuracao(v, attachmentPoint)
 	end
 end
 
-local function startFuracaoLogic()
-	furacaoActive = true
+-- ============================
+-- Funções de Controle do Blackhole (Giro + Atração)
+-- ============================
+
+local function startBlackHoleEffect()
+    -- 1. Inicia o Giro
+	local char = player.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+	if not root then return end
+    if hum then hum.AutoRotate = false end -- Apenas desativa rotação automática, não trava animação
+
+	if tornadoMotorConnection then safeDisconnect(tornadoMotorConnection) end
+	tornadoMotorConnection = RunService.RenderStepped:Connect(function()
+		if root and root.Parent and tornadoSpinSpeed > 0 then
+			root.CFrame = CFrame.new(root.Position) * root.CFrame.Rotation * CFrame.Angles(0, math.rad(tornadoSpinSpeed * 6), 0)
+		end
+	end)
+	trackConnection(tornadoMotorConnection)
+
+    -- 2. Inicia a Atração (Blackhole)
+    furacaoActive = true
 	
 	if furacaoLoop then safeDisconnect(furacaoLoop); furacaoLoop = nil end
 	if furacaoDescendantConn then safeDisconnect(furacaoDescendantConn); furacaoDescendantConn = nil end
 	
 	furacaoHRP, furacaoAttach = setupFuracao()
 
-	-- Altera a atração para pegar uma área muito grande (infinitamente, ou seja, math.huge de SimulationRadius)
-	-- E atrai *todos* os Descendants do Workspace
 	for _, v in next, Workspace:GetDescendants() do
 		ForcePartFuracao(v, furacaoAttach)
 	end
@@ -1228,118 +1173,87 @@ local function startFuracaoLogic()
 		local offsetX = math.cos(furacaoAngle) * furacaoRadius
 		local offsetZ = math.sin(furacaoAngle) * furacaoRadius
 
-		-- Furacão no seu humanoid:
 		furacaoAttach.WorldCFrame = furacaoHRP.CFrame * CFrame.new(offsetX, 0, offsetZ)
 	end)
 	trackConnection(furacaoLoop)
+    
+    sofaRunning = true
 end
 
-local function stopFuracaoLogic()
+local function stopBlackHoleEffect()
+    -- 1. Para o Giro
+	if tornadoMotorConnection then safeDisconnect(tornadoMotorConnection); tornadoMotorConnection = nil end
+
+    local char = player.Character
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then hum.AutoRotate = true end -- Devolve controle ao jogador
+
+    -- 2. Para a Atração
 	furacaoActive = false
 	
 	if furacaoLoop then safeDisconnect(furacaoLoop); furacaoLoop = nil end
 	if furacaoDescendantConn then safeDisconnect(furacaoDescendantConn); furacaoDescendantConn = nil end
 	
 	if furacaoAttach then
-		-- Move o ponto de atração para longe para garantir a desativação da força
 		furacaoAttach.WorldCFrame = CFrame.new(0, -1000, 0)
 	end
 	if furacaoFolder then safeDestroy(furacaoFolder); furacaoFolder = nil end
-end
-
--- ============================
--- Lógica da UI (TurtleLib)
--- ============================
-
-local function spawnBlackHoleUI()
-    local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/miroeramaa/TurtleLib/main/TurtleUiLib.lua"))()
-    local window = library:Window("Projeto LKB")
-    blackHoleUI = window.Parent -- Salva o ScreenGui (ou o container da janela)
-
-    window:Slider("Radius Blackhole",1,100,10, function(Value)
-       furacaoRadius = Value
-    end)
-
-    -- Toggle da atração. Se o botão principal for desligado, esta UI e o Blackhole são mortos.
-    window:Toggle("Blackhole", true, function(Value)
-           if Value then
-                startFuracaoLogic()
-            else
-                stopFuracaoLogic()
-            end
-    end)
     
-    -- Inicia o Blackhole imediatamente quando a UI é spawnada.
-    startFuracaoLogic()
+    sofaRunning = false
 end
+
+-- ============================
+-- Lógica da UI (TurtleLib) & KILL GUI
+-- ============================
 
 local function destroyBlackHoleUI()
+    -- Primeiro, desliga qualquer lógica que esteja rodando
+    stopBlackHoleEffect() 
+
+    -- Remove a referência direta se existir
     if blackHoleUI then
         safeDestroy(blackHoleUI)
         blackHoleUI = nil
     end
+
+    -- VARREDURA: Garante que a UI da TurtleLib seja destruída do CoreGui
+    -- Isso faz a janela sumir completamente da tela.
+    for _, child in pairs(CoreGui:GetChildren()) do
+        if child.Name == "TurtleUiLib" then
+            child:Destroy()
+        end
+    end
 end
 
+local function spawnBlackHoleUI()
+    destroyBlackHoleUI() -- Previne duplicatas limpando antes
 
--- ============================
--- Lógica do Tornado (Rotação/Postura) - CONTROLE PRINCIPAL
--- ============================
+    local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/miroeramaa/TurtleLib/main/TurtleUiLib.lua"))()
+    local window = library:Window("Projeto LKB")
+    
+    -- Tenta capturar a ScreenGui criada
+    blackHoleUI = CoreGui:FindFirstChild("TurtleUiLib") or window.Parent
 
-local function startTornadoMode()
-	local char = player.Character
-	local hum = char and char:FindFirstChildOfClass("Humanoid")
-	local root = char and char:FindFirstChild("HumanoidRootPart")
+    window:Slider("Raio Blackhole", 1, 100, 10, function(Value)
+       furacaoRadius = Value
+    end)
 
-	if not hum or not root then
-		return
-	end
+    window:Slider("Velocidade Giro", 0, 100, 50, function(Value)
+        tornadoSpinSpeed = Value
+    end)
 
-	sofaRunning = true
-
-	saveOriginalAnimator(hum)
-	saveOriginalTransforms(char)
-
-	hum.AutoRotate = false
-	hum:ChangeState(Enum.HumanoidStateType.Running)
-
-	blockAnimator(hum)
-	stopAllAnimations(hum)
-	forceIdlePose(char)
-
-	if tornadoMotorConnection then safeDisconnect(tornadoMotorConnection) end
-	tornadoMotorConnection = RunService.RenderStepped:Connect(function()
-		if root and root.Parent then
-			-- Rotação de 300 graus por segundo
-			root.CFrame = CFrame.new(root.Position) * root.CFrame.Rotation * CFrame.Angles(0, math.rad(300), 0)
-		end
-	end)
-	trackConnection(tornadoMotorConnection)
-
-	spawnBlackHoleUI() -- Ligar UI e Atração (que chama startFuracaoLogic)
-end
-
-local function stopTornadoMode()
-	sofaRunning = false
-
-	if tornadoMotorConnection then safeDisconnect(tornadoMotorConnection); tornadoMotorConnection = nil end
-	if animatorBlockConnection then safeDisconnect(animatorBlockConnection); animatorBlockConnection = nil end
-	if descendantBlockConnection then safeDisconnect(descendantBlockConnection); descendantBlockConnection = nil end
-
-	local char = player.Character
-	local hum = char and char:FindFirstChildOfClass("Humanoid")
-
-	if hum and char then
-		restoreAnimations(hum, char)
-		hum.AutoRotate = true
-		hum:ChangeState(Enum.HumanoidStateType.Running)
-	end
-	
-	stopFuracaoLogic()  -- Desligar Atração (Blackhole)
-	destroyBlackHoleUI() -- Matar UI do Blackhole
+    -- Toggle interno: Controla o poder
+    window:Toggle("Ativar Giro + Atração", false, function(Value)
+           if Value then
+                startBlackHoleEffect()
+            else
+                stopBlackHoleEffect()
+            end
+    end)
 end
 
 -- ============================
--- Conexão Principal do Toggle
+-- Conexão Principal do Toggle (HUB)
 -- ============================
 
 tornadoBodyToggle.MouseButton1Click:Connect(function()
@@ -1350,9 +1264,11 @@ tornadoBodyToggle.MouseButton1Click:Connect(function()
 	setToggleColor(tornadoBodyToggle, tornadoBodyAtivo)
 
 	if tornadoBodyAtivo then
-		startTornadoMode() 
+        -- LIGA: Apenas abre a janela
+		spawnBlackHoleUI() 
 	else
-		stopTornadoMode() 
+        -- DESLIGA: Mata a UI, some com a janela e para todos os scripts relacionados
+		destroyBlackHoleUI() 
 	end
 end)
 
@@ -1906,7 +1822,8 @@ killPlayerButton.MouseButton1Click:Connect(function()
     while task.wait() do
         if not targetRoot.Parent or not targetHum.Parent then break end
         
-        local yOffset = tornadoBodyAtivo and 4 or -4 -- A verificação do Tornado está aqui
+        -- ALTERAÇÃO AQUI: Removida a verificação do tornado.
+        local yOffset = -4 
         root.CFrame = targetRoot.CFrame * CFrame.new(1, yOffset, 0)
         
         root.Velocity = Vector3.new(0,0,0)
@@ -1958,6 +1875,7 @@ killPlayerButton.MouseButton1Click:Connect(function()
     if plate1 and plate1.Parent then plate1:Destroy() end
     if plate2 and plate2.Parent then plate2:Destroy() end
 end)
+
 
 -- BringPlayer lógica
 bringPlayerButton.MouseButton1Click:Connect(function()
