@@ -1,3 +1,5 @@
+do
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TextService = game:GetService("TextService")
@@ -194,7 +196,7 @@ tabCorner.Parent = tabContainer
 
 	local function makeTab(nameText)
 		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.new(1, -10, 0, 30)
+		btn.Size = UDim2.new(1, -10, 0, 35)
 		btn.Position = UDim2.new(0, 5, 0, 5)
 		btn.Text = nameText
 		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -243,7 +245,7 @@ tabCorner.Parent = tabContainer
 	trackGui(avatarImg)
 
 	local apelidoLabel = Instance.new("TextLabel")
-	apelidoLabel.Size = UDim2.new(1, -10, 0, 30)
+	apelidoLabel.Size = UDim2.new(1, -10, 0, 35)
 	apelidoLabel.Text = "Name: Loading..."
 	apelidoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	apelidoLabel.BackgroundTransparency = 1
@@ -254,7 +256,7 @@ tabCorner.Parent = tabContainer
 	trackGui(apelidoLabel)
 
 	local arrobaLabel = Instance.new("TextLabel")
-	arrobaLabel.Size = UDim2.new(1, -10, 0, 30)
+	arrobaLabel.Size = UDim2.new(1, -10, 0, 35)
 	arrobaLabel.Text = "Username: Loading..."
 	arrobaLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	arrobaLabel.BackgroundTransparency = 1
@@ -265,7 +267,7 @@ tabCorner.Parent = tabContainer
 	trackGui(arrobaLabel)
 
 	local idadeContaLabel = Instance.new("TextLabel")
-	idadeContaLabel.Size = UDim2.new(1, -10, 0, 30)
+	idadeContaLabel.Size = UDim2.new(1, -10, 0, 35)
 	idadeContaLabel.Text = "Account Age: Loading..."
 	idadeContaLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	idadeContaLabel.BackgroundTransparency = 1
@@ -276,7 +278,7 @@ tabCorner.Parent = tabContainer
 	trackGui(idadeContaLabel)
 
 	local criadoresLabel = Instance.new("TextLabel")
-	criadoresLabel.Size = UDim2.new(1, -10, 0, 30)
+	criadoresLabel.Size = UDim2.new(1, -10, 0, 35)
 	criadoresLabel.Text = "Dev: Ice - Elementar"
 	criadoresLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 	criadoresLabel.BackgroundTransparency = 1
@@ -287,7 +289,7 @@ tabCorner.Parent = tabContainer
 	trackGui(criadoresLabel)
 
 	local discordButton = Instance.new("TextButton")
-	discordButton.Size = UDim2.new(1, -10, 0, 40)
+	discordButton.Size = UDim2.new(1, -10, 0, 35)
 	discordButton.Text = "Copiar Discord"
 	discordButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	discordButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
@@ -383,7 +385,7 @@ tabCorner.Parent = tabContainer
     -- Selecionar player
 	local playerSelectButton = Instance.new("TextButton")
 	playerSelectButton.Name = "PlayerSelectButton"
-	playerSelectButton.Size = UDim2.new(1, -10, 0, 40)
+	playerSelectButton.Size = UDim2.new(1, -10, 0, 35)
 	playerSelectButton.Text = "👥 Selecionar Jogador..."
 	playerSelectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	playerSelectButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -410,7 +412,7 @@ tabCorner.Parent = tabContainer
 
 	local function makeFuncButton(parent, text, color)
 		local b = Instance.new("TextButton")
-		b.Size = UDim2.new(1, -10, 0, 40)
+		b.Size = UDim2.new(1, -10, 0, 35)
 		b.Text = text
 		b.TextColor3 = Color3.fromRGB(255,255,255)
 		b.BackgroundColor3 = color or Color3.fromRGB(30, 30, 30)
@@ -433,7 +435,7 @@ tabCorner.Parent = tabContainer
 	
 	
 	local flightFrame = Instance.new("Frame")
-	flightFrame.Size = UDim2.new(1, -10, 0, 40)
+	flightFrame.Size = UDim2.new(1, -10, 0, 35)
 	flightFrame.BackgroundTransparency = 1
 	flightFrame.Parent = pageParaMim
 	trackGui(flightFrame)
@@ -469,7 +471,7 @@ tabCorner.Parent = tabContainer
 	speedCorner.Parent = speedBox
 
 	local speedFrame = Instance.new("Frame")
-	speedFrame.Size = UDim2.new(1, -10, 0, 40)
+	speedFrame.Size = UDim2.new(1, -10, 0, 35)
 	speedFrame.BackgroundTransparency = 1
 	speedFrame.Parent = pageParaMim
 	trackGui(speedFrame)
@@ -494,13 +496,13 @@ tabCorner.Parent = tabContainer
 	local tpToPlayerButton = makeFuncButton(pageFuncoes, "➡️ Go to Player")
 	local tpBackButton = makeFuncButton(pageFuncoes, "⬅️ Come Back")
 	local viewPlayerButton = makeFuncButton(pageFuncoes, "🔍View Player [OFF]")
-	local killPlayerButton = makeFuncButton(pageFuncoes, "Kill Player", Color3.fromRGB(180,40,40))
-    local killAllButton = makeFuncButton(pageFuncoes, "Kill All", Color3.fromRGB(100, 0, 0))
-    local bringPlayerButton = makeFuncButton(pageFuncoes, "Bring Player", Color3.fromRGB(60, 100, 170))
-    local bringAllButton = makeFuncButton(pageFuncoes, "Bring All", Color3.fromRGB(80, 0, 150))
+	local killPlayerButton = makeFuncButton(pageFuncoes, "Kill Player")
+    local killAllButton = makeFuncButton(pageFuncoes, "Kill All")
+    local bringPlayerButton = makeFuncButton(pageFuncoes, "Bring Player")
+    local bringAllButton = makeFuncButton(pageFuncoes, "Bring All")
 	local debugToggle = Instance.new("TextButton")
 	debugToggle.Name = "DebugToggle"
-	debugToggle.Size = UDim2.new(1, -10, 0, 40) -- Ajuste de layout
+	debugToggle.Size = UDim2.new(1, -10, 0, 35) -- Ajuste de layout
 	debugToggle.Text = "⚙️ Mostrar Debug [OFF]"
 	debugToggle.TextColor3 = Color3.fromRGB(200,70,70)
 	debugToggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
@@ -2343,3 +2345,5 @@ end
 
 -- Inicia o Hub
 pcall(iniciarHub)
+
+end
