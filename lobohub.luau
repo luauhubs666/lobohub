@@ -210,7 +210,7 @@ tabCorner.Parent = tabContainer
 
 	local tabBemVindo = makeTab("🏠 Bem-vindo")
 	local tabPlayer = makeTab("👤 Player")
-	local tabFuncoes = makeTab("🛠️ Funções")
+	local tabTroll = makeTab("🛠️ Troll")
 	local tabProtecoes = makeTab("🛡 Proteções")
 	local tabClient = makeTab("💻 Client")
 	local tabDebug = makeTab("⚙️ Debug")
@@ -313,23 +313,23 @@ tabCorner.Parent = tabContainer
 	pagePlayerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	pagePlayerLayout.Parent = pagePlayer
 
-	local pageFuncoes =
+	local pageTroll =
  Instance.new("ScrollingFrame")
-	pageFuncoes.Name = "Page_Funcoes"
-	pageFuncoes.Size = UDim2.new(1, 0, 1, 0)
-	pageFuncoes.BackgroundTransparency = 1
-	pageFuncoes.Visible = false
-	pageFuncoes.Parent = pageContainer
-	trackGui(pageFuncoes)
+	pageTroll.Name = "Page_Troll"
+	pageTroll.Size = UDim2.new(1, 0, 1, 0)
+	pageTroll.BackgroundTransparency = 1
+	pageTroll.Visible = false
+	pageTroll.Parent = pageContainer
+	trackGui(pageTroll)
 	
-		pageFuncoes.CanvasSize = UDim2.new(0, 0, 2, 0) -- '2' significa 200% da altura do Frame. Você pode ajustar este valor.
-	pageFuncoes.ScrollBarThickness = 6 -- Ajuste fino
-	pageFuncoes.Active = true -- Garante que aceita cliques
+		pageTroll.CanvasSize = UDim2.new(0, 0, 2, 0) -- '2' significa 200% da altura do Frame. Você pode ajustar este valor.
+	pageTroll.ScrollBarThickness = 6 -- Ajuste fino
+	pageTroll.Active = true -- Garante que aceita cliques
 
-	local pageFuncoesLayout = Instance.new("UIListLayout")
-	pageFuncoesLayout.Padding = UDim.new(0, 8)
-	pageFuncoesLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	pageFuncoesLayout.Parent = pageFuncoes
+	local pageTrollLayout = Instance.new("UIListLayout")
+	pageTrollLayout.Padding = UDim.new(0, 8)
+	pageTrollLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	pageTrollLayout.Parent = pageTroll
 
 	local pageClient = Instance.new("Frame")
 	pageClient.Name = "Page_Client"
@@ -376,7 +376,7 @@ tabCorner.Parent = tabContainer
 	tabProtecoes.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
 		pagePlayer.Visible = false
-		pageFuncoes.Visible = false
+		pageTroll.Visible = false
 		pageClient.Visible = false
 		pageDebug.Visible = false
 		pageProtecoes.Visible = true
@@ -391,7 +391,7 @@ tabCorner.Parent = tabContainer
 	playerSelectButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	playerSelectButton.Font = Enum.Font.SourceSansBold
 	playerSelectButton.TextScaled = true
-	playerSelectButton.Parent = pageFuncoes
+	playerSelectButton.Parent = pageTroll
 	trackGui(playerSelectButton)
 
 	local playerList = Instance.new("ScrollingFrame")
@@ -402,7 +402,7 @@ tabCorner.Parent = tabContainer
 	playerList.BorderSizePixel = 0
 	playerList.ScrollBarThickness = 6
 	playerList.Visible = false
-	playerList.Parent = pageFuncoes
+	playerList.Parent = pageTroll
 	trackGui(playerList)
 
 	local playerListLayout = Instance.new("UIListLayout")
@@ -494,13 +494,13 @@ tabCorner.Parent = tabContainer
 	speedValueCorner.CornerRadius = UDim.new(0,6)
 	speedValueCorner.Parent = speedValueBox
 
-	local tpToPlayerButton = makeFuncButton(pageFuncoes, "➡️ Go to Player")
-	local tpBackButton = makeFuncButton(pageFuncoes, "⬅️ Come Back")
-	local viewPlayerButton = makeFuncButton(pageFuncoes, "🔍View Player [OFF]")
-	local killPlayerButton = makeFuncButton(pageFuncoes, "Kill Player")
-    local killAllButton = makeFuncButton(pageFuncoes, "Kill All")
-    local bringPlayerButton = makeFuncButton(pageFuncoes, "Bring Player")
-    local bringAllButton = makeFuncButton(pageFuncoes, "Bring All")
+	local tpToPlayerButton = makeFuncButton(pageTroll, "➡️ Go to Player")
+	local tpBackButton = makeFuncButton(pageTroll, "⬅️ Come Back")
+	local viewPlayerButton = makeFuncButton(pageTroll, "🔍View Player [OFF]")
+	local killPlayerButton = makeFuncButton(pageTroll, "Kill Player")
+    local killAllButton = makeFuncButton(pageTroll, "Kill All")
+    local bringPlayerButton = makeFuncButton(pageTroll, "Bring Player")
+    local bringAllButton = makeFuncButton(pageTroll, "Bring All")
 	local debugToggle = Instance.new("TextButton")
 	debugToggle.Name = "DebugToggle"
 	debugToggle.Size = UDim2.new(1, -10, 0, 35) -- Ajuste de layout
@@ -603,7 +603,7 @@ tabCorner.Parent = tabContainer
 	tabBemVindo.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = true
 		pagePlayer.Visible = false
-		pageFuncoes.Visible = false
+		pageTroll.Visible = false
 		pageClient.Visible = false
 		pageDebug.Visible = false
 		pageProtecoes.Visible = false
@@ -613,17 +613,17 @@ tabCorner.Parent = tabContainer
 	tabPlayer.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
 		pagePlayer.Visible = true
-		pageFuncoes.Visible = false
+		pageTroll.Visible = false
 		pageClient.Visible = false
 		pageDebug.Visible = false
 		pageProtecoes.Visible = false
 	end)
 
     -- Clique da página funções
-	tabFuncoes.MouseButton1Click:Connect(function()
+	tabTroll.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
 		pagePlayer.Visible = false
-		pageFuncoes.Visible = true
+		pageTroll.Visible = true
 		pageClient.Visible = false
 		pageDebug.Visible = false
 		pageProtecoes.Visible = false
@@ -633,7 +633,7 @@ tabCorner.Parent = tabContainer
 	tabClient.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
 		pagePlayer.Visible = false
-		pageFuncoes.Visible = false
+		pageTroll.Visible = false
 		pageClient.Visible = true
 		pageDebug.Visible = false
 		pageProtecoes.Visible = false
@@ -643,7 +643,7 @@ tabCorner.Parent = tabContainer
 	tabDebug.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
 		pagePlayer.Visible = false
-		pageFuncoes.Visible = false
+		pageTroll.Visible = false
 		pageClient.Visible = false
 		pageDebug.Visible = true
 	    pageProtecoes.Visible = false
@@ -653,7 +653,7 @@ tabCorner.Parent = tabContainer
 	tabProtecoes.MouseButton1Click:Connect(function()
 	pageBemVindo.Visible = false
 	pagePlayer.Visible = false
-	pageFuncoes.Visible = false
+	pageTroll.Visible = false
 	pageClient.Visible = false
 	pageDebug.Visible = false
 	pageProtecoes.Visible = true
@@ -667,7 +667,7 @@ tabCorner.Parent = tabContainer
 		local ok, content = pcall(function() return Players:GetUserThumbnailAsync(userId, thumbType, thumbSize) end)
 		avatarImg.Image = (ok and content) and content or ""
 		apelidoLabel.Text = "Apelido: " .. (player.DisplayName or "N/A")
-		arrobaLabel.Text = "@: " .. (player.Name or "N/A")
+		arrobaLabel.Text = "Starter Name: " .. (player.Name or "N/A")
 		idadeContaLabel.Text = "Idade da Conta: " .. tostring(player.AccountAge or 0) .. " dias"
 	end
 
@@ -783,7 +783,7 @@ tabCorner.Parent = tabContainer
 		billGui.AlwaysOnTop = true    
 		billGui.Parent = head    
 		local textLabel = Instance.new("TextLabel")    
-		textLabel.Text = "@" .. targetPlayer.Name    
+		textLabel.Text = "Starter Name" .. targetPlayer.Name    
 		textLabel.Size = UDim2.new(1, 0, 1, 0)    
 		textLabel.BackgroundTransparency = 1    
 		-- Cor do texto do ESP
@@ -1029,7 +1029,7 @@ local blackHoleUI = nil -- Referência para a UI
 local tornadoSpinSpeed = 50 -- Velocidade padrão
 
 -- ============================
--- Funções Auxiliares (Segurança)
+-- Troll Auxiliares (Segurança)
 -- ============================
 local function safeDisconnect(connection)
     if connection and connection.Connected then
@@ -1127,7 +1127,7 @@ local function ForcePartFuracao(v, attachmentPoint)
 end
 
 -- ============================
--- Funções de Controle do Blackhole (Giro + Atração)
+-- Troll de Controle do Blackhole (Giro + Atração)
 -- ============================
 
 local function startBlackHoleEffect()
