@@ -1,5 +1,3 @@
-do
-
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TextService = game:GetService("TextService")
@@ -18,6 +16,8 @@ local playerGui = player:WaitForChild("PlayerGui")
 local camera = Workspace.CurrentCamera
 
 local hubVisivel = false
+local shiftLockAtivo = false
+local shiftLockConnection = nil
 local espAtivo = false
 local noclipAtivo = false
 local clickTpAtivo = false
@@ -209,7 +209,7 @@ tabCorner.Parent = tabContainer
 	end
 
 	local tabBemVindo = makeTab("🏠 Bem-vindo")
-	local tabParaMim = makeTab("👤 Para mim")
+	local tabPlayer = makeTab("👤 Player")
 	local tabFuncoes = makeTab("🛠️ Funções")
 	local tabProtecoes = makeTab("🛡 Proteções")
 	local tabClient = makeTab("💻 Client")
@@ -299,19 +299,19 @@ tabCorner.Parent = tabContainer
 	discordButton.Parent = pageBemVindo
 	trackGui(discordButton)
 
-    -- Página Para Mim
-	local pageParaMim = Instance.new("Frame")
-	pageParaMim.Name = "Page_ParaMim"
-	pageParaMim.Size = UDim2.new(1, 0, 1, 0)
-	pageParaMim.BackgroundTransparency = 1
-	pageParaMim.Visible = false
-	pageParaMim.Parent = pageContainer
-	trackGui(pageParaMim)
+    -- Página Player
+	local pagePlayer = Instance.new("Frame")
+	pagePlayer.Name = "Page_Player"
+	pagePlayer.Size = UDim2.new(1, 0, 1, 0)
+	pagePlayer.BackgroundTransparency = 1
+	pagePlayer.Visible = false
+	pagePlayer.Parent = pageContainer
+	trackGui(pagePlayer)
 
-	local pageParaMimLayout = Instance.new("UIListLayout")
-	pageParaMimLayout.Padding = UDim.new(0, 8)
-	pageParaMimLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	pageParaMimLayout.Parent = pageParaMim
+	local pagePlayerLayout = Instance.new("UIListLayout")
+	pagePlayerLayout.Padding = UDim.new(0, 8)
+	pagePlayerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	pagePlayerLayout.Parent = pagePlayer
 
 	local pageFuncoes =
  Instance.new("ScrollingFrame")
@@ -375,7 +375,7 @@ tabCorner.Parent = tabContainer
     -- Clique da aba proteções
 	tabProtecoes.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
-		pageParaMim.Visible = false
+		pagePlayer.Visible = false
 		pageFuncoes.Visible = false
 		pageClient.Visible = false
 		pageDebug.Visible = false
@@ -424,12 +424,13 @@ tabCorner.Parent = tabContainer
 	end
 
 -- Opções
-	local espToggle = makeFuncButton(pageParaMim, "ꙮ ESP [OFF]", Color3.fromRGB(30, 30, 30))
-	local clickTPToggle = makeFuncButton(pageParaMim, "👆 Click TP [OFF]", Color3.fromRGB(30, 30, 30))
-	local noclipToggle = makeFuncButton(pageParaMim, "⿻ Noclip [OFF]", Color3.fromRGB(30, 30, 30))
-	local infiniteJumpToggle = makeFuncButton(pageParaMim, "∞ Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
-    local tornadoBodyToggle = makeFuncButton(pageParaMim," 🌪Tornado [OFF]", Color3.fromRGB(30, 30, 30))
-    local puxarPartsToggle = makeFuncButton(pageParaMim,"🌀 Redemoíno", Color3.fromRGB(30, 30, 30))
+	local espToggle = makeFuncButton(pagePlayer, "ꙮ ESP [OFF]", Color3.fromRGB(30, 30, 30))
+	local clickTPToggle = makeFuncButton(pagePlayer, "👆 Click TP [OFF]", Color3.fromRGB(30, 30, 30))
+	local noclipToggle = makeFuncButton(pagePlayer, "⿻ Noclip [OFF]", Color3.fromRGB(30, 30, 30))
+	local shiftLockToggle = makeFuncButton(pagePlayer, "🔒 Shift Lock [OFF]", Color3.fromRGB(30, 30, 30))
+	local infiniteJumpToggle = makeFuncButton(pagePlayer, "∞ Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
+    local tornadoBodyToggle = makeFuncButton(pagePlayer," 🌪Tornado [OFF]", Color3.fromRGB(30, 30, 30))
+    local puxarPartsToggle = makeFuncButton(pagePlayer,"🌀 Redemoíno [CLICK]", Color3.fromRGB(30, 30, 30))
     local AntiSitToggle = makeFuncButton(pageProtecoes,"🪑🚫 AntiSit [OFF]", Color3.fromRGB(30, 30, 30))
 	local dynamicShadowsToggle = makeFuncButton(pageClient, "Shadows [ON]", Color3.fromRGB(30, 30, 30))
 	
@@ -437,7 +438,7 @@ tabCorner.Parent = tabContainer
 	local flightFrame = Instance.new("Frame")
 	flightFrame.Size = UDim2.new(1, -10, 0, 35)
 	flightFrame.BackgroundTransparency = 1
-	flightFrame.Parent = pageParaMim
+	flightFrame.Parent = pagePlayer
 	trackGui(flightFrame)
 
 	local flightToggle = Instance.new("TextButton")
@@ -473,7 +474,7 @@ tabCorner.Parent = tabContainer
 	local speedFrame = Instance.new("Frame")
 	speedFrame.Size = UDim2.new(1, -10, 0, 35)
 	speedFrame.BackgroundTransparency = 1
-	speedFrame.Parent = pageParaMim
+	speedFrame.Parent = pagePlayer
 	trackGui(speedFrame)
 
 	-- Valor de velocidade, textbox
@@ -601,17 +602,17 @@ tabCorner.Parent = tabContainer
     -- Clique da págia bem-vindo
 	tabBemVindo.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = true
-		pageParaMim.Visible = false
+		pagePlayer.Visible = false
 		pageFuncoes.Visible = false
 		pageClient.Visible = false
 		pageDebug.Visible = false
 		pageProtecoes.Visible = false
 	end)
 
-    -- Clique da página para mim
-	tabParaMim.MouseButton1Click:Connect(function()
+    -- Clique da página Player
+	tabPlayer.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
-		pageParaMim.Visible = true
+		pagePlayer.Visible = true
 		pageFuncoes.Visible = false
 		pageClient.Visible = false
 		pageDebug.Visible = false
@@ -621,7 +622,7 @@ tabCorner.Parent = tabContainer
     -- Clique da página funções
 	tabFuncoes.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
-		pageParaMim.Visible = false
+		pagePlayer.Visible = false
 		pageFuncoes.Visible = true
 		pageClient.Visible = false
 		pageDebug.Visible = false
@@ -631,7 +632,7 @@ tabCorner.Parent = tabContainer
     -- Clique da página client
 	tabClient.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
-		pageParaMim.Visible = false
+		pagePlayer.Visible = false
 		pageFuncoes.Visible = false
 		pageClient.Visible = true
 		pageDebug.Visible = false
@@ -641,7 +642,7 @@ tabCorner.Parent = tabContainer
     -- Clique da página debug
 	tabDebug.MouseButton1Click:Connect(function()
 		pageBemVindo.Visible = false
-		pageParaMim.Visible = false
+		pagePlayer.Visible = false
 		pageFuncoes.Visible = false
 		pageClient.Visible = false
 		pageDebug.Visible = true
@@ -651,7 +652,7 @@ tabCorner.Parent = tabContainer
 	-- Clique da página proteções
 	tabProtecoes.MouseButton1Click:Connect(function()
 	pageBemVindo.Visible = false
-	pageParaMim.Visible = false
+	pagePlayer.Visible = false
 	pageFuncoes.Visible = false
 	pageClient.Visible = false
 	pageDebug.Visible = false
@@ -2266,6 +2267,67 @@ puxarPartsToggle.MouseButton1Click:Connect(function()
     end)
 end)
 
+    -- Lógica do Shift Lock Horizontal (Sem Offset)
+    shiftLockToggle.MouseButton1Click:Connect(function()
+        shiftLockAtivo = not shiftLockAtivo
+        local base = "🔒 Shift Lock"
+        shiftLockToggle.Text = base .. (shiftLockAtivo and " [ON]" or " [OFF]")
+        setToggleColor(shiftLockToggle, shiftLockAtivo)
+
+        local char = player.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+
+        if shiftLockAtivo then
+            -- Ativar
+            if hum then 
+                hum.AutoRotate = false 
+                hum.CameraOffset = Vector3.new(0,0,0) -- Garante zero offset como você pediu
+            end
+            
+            -- Se já tiver uma conexão rodando, mata ela antes de criar nova
+            if shiftLockConnection then safeDisconnect(shiftLockConnection) end
+
+            shiftLockConnection = RunService.RenderStepped:Connect(function()
+                if not shiftLockAtivo then return end
+                
+                local character = player.Character
+                local h = character and character:FindFirstChildOfClass("Humanoid")
+                local r = character and character:FindFirstChild("HumanoidRootPart")
+
+                if h and r and h.Health > 0 then
+                    -- Mantém o autorotate desligado
+                    h.AutoRotate = false
+                    
+                    -- Pega a rotação da câmera
+                    local _, yaw, _ = camera.CFrame:ToOrientation()
+                    
+                    -- Aplica no personagem
+                    r.CFrame = CFrame.new(r.Position) * CFrame.Angles(0, yaw, 0)
+                end
+            end)
+            trackConnection(shiftLockConnection) -- Adiciona ao sistema de limpeza do hub
+
+        else
+            -- Desativar
+            if shiftLockConnection then safeDisconnect(shiftLockConnection); shiftLockConnection = nil end
+            
+            if hum then
+                hum.AutoRotate = true
+                hum.CameraOffset = Vector3.new(0, 0, 0)
+            end
+        end
+    end)
+    
+    -- Garante que reseta se o personagem morrer/renascer
+    player.CharacterAdded:Connect(function(newChar)
+        if shiftLockAtivo then
+            task.wait(0.2) -- Espera carregar
+            local h = newChar:WaitForChild("Humanoid", 5)
+            if h then h.AutoRotate = false end
+        end
+    end)
+
 	local function killAllHub()
 		hubVisivel = false
 		espAtivo = false
@@ -2345,5 +2407,3 @@ end
 
 -- Inicia o Hub
 pcall(iniciarHub)
-
-end
