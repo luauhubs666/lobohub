@@ -783,7 +783,7 @@ tabCorner.Parent = tabContainer
 		billGui.AlwaysOnTop = true    
 		billGui.Parent = head    
 		local textLabel = Instance.new("TextLabel")    
-		textLabel.Text = "Starter Name" .. targetPlayer.Name    
+		textLabel.Text = "" .. targetPlayer.Name    
 		textLabel.Size = UDim2.new(1, 0, 1, 0)    
 		textLabel.BackgroundTransparency = 1    
 		-- Cor do texto do ESP
