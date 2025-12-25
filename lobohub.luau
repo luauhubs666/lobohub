@@ -1348,108 +1348,115 @@ end)
 		return v
 	end
 
-    -- Iniciar voo
-	local function startFlight()
-		if flying then return end
-		local char = player.Character
-		if not char then return end
-		local hrp = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-		local humanoid = char:FindFirstChildOfClass("Humanoid")
-		if not hrp or not humanoid then
-			return
+-- Iniciar voo
+local function startFlight()
+	if flying then return end
+	local char = player.Character
+	if not char then return end
+	local hrp = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	if not hrp or not humanoid then
+		return
+	end
+
+	-- Limpar forças anteriores
+	for _, v in pairs(hrp:GetChildren()) do
+		if v:IsA("BodyVelocity") or v:IsA("BodyGyro") or v:IsA("BodyPosition") then
+			v:Destroy()
 		end
-	   
-      -- Limpar forças anteriores
-		for _, v in pairs(hrp:GetChildren()) do
-			if v:IsA("BodyVelocity") or v:IsA("BodyGyro") or v:IsA("BodyPosition") then
-				v:Destroy()
-			end
+	end
+
+	local bv = Instance.new("BodyVelocity")    
+	bv.Name = "LoboFlyBV"    
+	bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge) 
+	bv.Velocity = Vector3.new(0,0,0)    
+	bv.P = 1250    
+	bv.Parent = hrp    
+	trackBody(bv)    
+
+	flying = true    
+	flightBv = bv    
+
+	humanoid.PlatformStand = true 
+	humanoid.AutoRotate = false
+
+	local animateScript = char:FindFirstChild("Animate")
+	if animateScript then
+		animateScript.Disabled = true
+	end
+	for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+		track:Stop()
+	end
+
+	flightRenderConn = RunService.RenderStepped:Connect(function(dt)    
+		if not flying or not hrp or not hrp.Parent then return end    
+
+		local speed = getFlightSpeed()
+
+		local camLook = camera.CFrame.LookVector
+		local camRight = camera.CFrame.RightVector
+
+		-- A CORREÇÃO ESTÁ AQUI EMBAIXO:
+		-- Zeramos a velocidade de rotação física para ela não brigar com o CFrame
+		hrp.RotVelocity = Vector3.new(0,0,0)
+		hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + camLook)
+
+		local moveDir = humanoid.MoveDirection 
+		local camLookFlat = (camLook * Vector3.new(1,0,1)).Unit
+		local camRightFlat = (camRight * Vector3.new(1,0,1)).Unit
+
+		local fwdInput = 0
+		local sideInput = 0
+
+		if moveDir.Magnitude > 0 then
+			fwdInput = moveDir:Dot(camLookFlat)
+			sideInput = moveDir:Dot(camRightFlat)
 		end
 
-		local bv = Instance.new("BodyVelocity")    
-		bv.Name = "LoboFlyBV"    
-		bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge) -- Força infinita para ignorar gravidade total
-		bv.Velocity = Vector3.new(0,0,0)    
-		bv.P = 1250    
-		bv.Parent = hrp    
-		trackBody(bv)    
+		local finalVelocity = (camLook * fwdInput + camRight * sideInput) * speed
 
-		flying = true    
-		flightBv = bv    
-		
-		humanoid.PlatformStand = true 
-		humanoid.AutoRotate = false
+		pcall(function()    
+			if flightBv then flightBv.Velocity = finalVelocity end    
+		end)    
+	end)    
+	trackConnection(flightRenderConn)
+end
+
+-- Parar de voar
+local function stopFlight()
+	if not flying then return end
+	flying = false
+	if flightRenderConn then safeDisconnect(flightRenderConn); flightRenderConn = nil end
+	if flightBv and flightBv.Parent then safeDestroy(flightBv) end
+	flightBv = nil
+
+	local char = player.Character
+	if char then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then 
+			hum.PlatformStand = false 
+			hum.AutoRotate = true
+		end
+		-- Ao sair do voo, é bom garantir que não sobrou inércia
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		if hrp then hrp.RotVelocity = Vector3.new(0,0,0) end
 		
 		local animateScript = char:FindFirstChild("Animate")
-		if animateScript then
-			animateScript.Disabled = true
-		end
-		for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
-			track:Stop()
-		end
-
-		flightRenderConn = RunService.RenderStepped:Connect(function(dt)    
-			if not flying or not hrp or not hrp.Parent then return end    
-
-			local speed = getFlightSpeed()
-			
-			local camLook = camera.CFrame.LookVector
-			local camRight = camera.CFrame.RightVector
-			
-			hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + camLook)
-
-			local moveDir = humanoid.MoveDirection 
-			local camLookFlat = (camLook * Vector3.new(1,0,1)).Unit
-			local camRightFlat = (camRight * Vector3.new(1,0,1)).Unit
-			
-			local fwdInput = 0
-			local sideInput = 0
-			
-			if moveDir.Magnitude > 0 then
-				fwdInput = moveDir:Dot(camLookFlat)
-				sideInput = moveDir:Dot(camRightFlat)
-			end
-
-			local finalVelocity = (camLook * fwdInput + camRight * sideInput) * speed
-
-			pcall(function()    
-				if flightBv then flightBv.Velocity = finalVelocity end    
-			end)    
-		end)    
-		trackConnection(flightRenderConn)
+		if animateScript then animateScript.Disabled = false end
 	end
+end
 
-    -- Parar de voar
-	local function stopFlight()
-		if not flying then return end
-		flying = false
-		if flightRenderConn then safeDisconnect(flightRenderConn); flightRenderConn = nil end
-		if flightBv and flightBv.Parent then safeDestroy(flightBv) end
-		flightBv = nil
-		
-		local char = player.Character
-		if char then
-			local hum = char:FindFirstChildOfClass("Humanoid")
-			if hum then 
-				hum.PlatformStand = false 
-				hum.AutoRotate = true
-			end
-			local animateScript = char:FindFirstChild("Animate")
-			if animateScript then animateScript.Disabled = false end
-		end
+flightToggle.MouseButton1Click:Connect(function()
+	if flying then
+		stopFlight()
+		flightToggle.Text = "Fly"
+		setToggleColor(flightToggle, false)
+	else
+		startFlight()
+		flightToggle.Text = "Fly"
+		setToggleColor(flightToggle, true)
 	end
-
-	flightToggle.MouseButton1Click:Connect(function()
-		if flying then
-			stopFlight()
-			flightToggle.Text = "Fly"
-			setToggleColor(flightToggle, false)
-		else
-			startFlight()
-			flightToggle.Text = "Fly"
-			setToggleColor(flightToggle, true)
-		end
-	end)
+end)
 
 	tpToPlayerButton.MouseButton1Click:Connect(function()
 		if not jogadorSelecionado then return end
