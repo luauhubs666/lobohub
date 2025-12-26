@@ -102,6 +102,7 @@ local function iniciarHub()
 	toggleBotao.Size = UDim2.new(0, 50, 0, 50)
 	toggleBotao.Position = UDim2.new(0, 10, 0.5, -25)
 	toggleBotao.Draggable = true
+	toggleBotao.ZIndex = 100
 	toggleBotao.Parent = loboHubGui
 	trackGui(toggleBotao)
 
