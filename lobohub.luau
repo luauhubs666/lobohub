@@ -462,7 +462,7 @@ tabCorner.Parent = tabContainer
 	speedBox.Size = UDim2.new(1,-190, 1, 0)
 	speedBox.Position = UDim2.new(0, 190, 0, 0)
 	speedBox.Text = "50"
-	speedBox.PlaceholderText = "vel"
+	speedBox.PlaceholderText = "WalkSpeed"
 	speedBox.ClearTextOnFocus = false
 	speedBox.Font = Enum.Font.SourceSans
 	speedBox.TextColor3 = Color3.fromRGB(255,255,255)
@@ -485,7 +485,7 @@ tabCorner.Parent = tabContainer
 	speedValueBox.Size = UDim2.new(1, 0, 1, 0)
 	speedValueBox.Position = UDim2.new(0, 0, 0, 0)
 	speedValueBox.Text = "16"
-	speedValueBox.PlaceholderText = "Velocidade (WalkSpeed)"
+	speedValueBox.PlaceholderText = "WalkSpeed"
 	speedValueBox.ClearTextOnFocus = false
 	speedValueBox.Font = Enum.Font.SourceSans
 	speedValueBox.TextColor3 = Color3.fromRGB(255,255,255)
@@ -580,27 +580,39 @@ tabCorner.Parent = tabContainer
 	end
 
 	local function applySpeedValue()
-		local char = player.Character
-		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		if not hum then return end
+	local char = player.Character
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	if not hum then return end
 
-		local newSpeed = tonumber(speedValueBox.Text)
-		if not newSpeed or newSpeed <= 0 then
-			newSpeed = 16
-		end
-		if newSpeed > 500 then newSpeed = 500 end
-		
-		if hum.WalkSpeed ~= originalWalkSpeed and hum.WalkSpeed ~= newSpeed then 
-			originalWalkSpeed = hum.WalkSpeed
-		end
-		
-		hum.WalkSpeed = newSpeed
+	local newSpeed = tonumber(speedValueBox.Text)
+	if not newSpeed or newSpeed <= 0 then
+		newSpeed = 16
+	end
+	if newSpeed > 500 then newSpeed = 500 end
+
+	if hum.WalkSpeed ~= originalWalkSpeed and hum.WalkSpeed ~= newSpeed then
+		originalWalkSpeed = hum.WalkSpeed
 	end
 
-	toggleBotao.MouseButton1Click:Connect(function()
-		hubVisivel = not hubVisivel
-		mainFrame.Visible = hubVisivel
+	hum.WalkSpeed = newSpeed
+
+	hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+		local expectedSpeed = tonumber(speedValueBox.Text)
+		if not expectedSpeed or expectedSpeed <= 0 then
+			expectedSpeed = 16
+		end
+		if expectedSpeed > 500 then expectedSpeed = 500 end
+
+		if hum.WalkSpeed ~= expectedSpeed then
+			hum.WalkSpeed = expectedSpeed
+		end
 	end)
+end
+
+toggleBotao.MouseButton1Click:Connect(function()
+	hubVisivel = not hubVisivel
+	mainFrame.Visible = hubVisivel
+end)
 
     -- Clique da págia bem-vindo
 	tabBemVindo.MouseButton1Click:Connect(function()
@@ -1413,151 +1425,189 @@ killAllButton.MouseButton1Click:Connect(function()
     local root = char:WaitForChild("HumanoidRootPart")
     local RunService = game:GetService("RunService")
 
-    local savedCFrame = root.CFrame
+    local savedCFrame = root.CFrame      
+      
+    -- Imortalidade total      
+    hum.PlatformStand = true      
+    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do      
+        if state ~= Enum.HumanoidStateType.None then      
+            hum:SetStateEnabled(state, false)      
+        end      
+    end      
+      
+    -- Baseplates de segurança      
+    local p1 = Instance.new("Part", workspace)      
+    p1.Size = Vector3.new(800,1,800); p1.Anchored = true; p1.CanCollide = true      
+    p1.Transparency = 1; p1.CFrame = CFrame.new(0,-195,0)      
+      
+    local p2 = Instance.new("Part", workspace)      
+    p2.Size = Vector3.new(1200,1,1200); p2.Anchored = true; p2.CanCollide = true      
+    p2.Transparency = 1; p2.CFrame = CFrame.new(0,-250,0)      
+      
+    -- Nunca morre      
+    local neverDie = RunService.Heartbeat:Connect(function()      
+        if root.Position.Y <= -245 then      
+            root.CFrame = savedCFrame      
+            root.Velocity = Vector3.zero      
+        end      
+    end)      
+      
+    -- Giro insano (Mantido separado para manter o caos)
+    local spin = RunService.Heartbeat:Connect(function(dt)      
+        root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)      
+    end)      
+      
+    -- Função pra pegar Couch novo      
+    local function equipCouch()      
+        local tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")      
+        if not tool then      
+            game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer("PickingTools", "Couch")      
+            repeat task.wait()      
+                tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")      
+            until tool      
+        end      
+        hum:EquipTool(tool)      
+        task.wait(0.1)      
+    end      
+      
+    -- Primeiro equipa o couch      
+    equipCouch()      
+      
+    -- Coleta alvos vivos, de pé e que ainda estão no jogo      
+    local targets = {}      
+    for _, plr in ipairs(game.Players:GetPlayers()) do      
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then      
+            local tHum = plr.Character.Humanoid      
+            if tHum.Health > 0 and tHum.Sit == false then      
+                table.insert(targets, plr)      
+            end      
+        end      
+    end      
+      
+      
+    -- MATA TODOS      
+    for i, plr in ipairs(targets) do      
+        local tChar = plr.Character      
+        if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then continue end -- desistiu se saiu      
+        local tRoot = tChar.HumanoidRootPart      
+        local tHum = tChar.Humanoid      
+      
+        -- Ignora completamente quem está sentado ou já morreu      
+        if tHum.Health <= 0 or tHum.Sit then continue end      
+      
+        -- Couch novo pra cada vítima      
+        equipCouch()      
+      
+        -- Marcador de tempo para o Timeout (10 segundos)
+        local startTime = tick()
+        local timedOut = false
 
-    -- Imortalidade total
-    hum.PlatformStand = true
-    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
-        if state ~= Enum.HumanoidStateType.None then
-            hum:SetStateEnabled(state, false)
-        end
-    end
-
-    -- Baseplates de segurança
-    local p1 = Instance.new("Part", workspace)
-    p1.Size = Vector3.new(800,1,800); p1.Anchored = true; p1.CanCollide = true
-    p1.Transparency = 1; p1.CFrame = CFrame.new(0,-195,0)
-
-    local p2 = Instance.new("Part", workspace)
-    p2.Size = Vector3.new(1200,1,1200); p2.Anchored = true; p2.CanCollide = true
-    p2.Transparency = 1; p2.CFrame = CFrame.new(0,-250,0)
-
-    -- Nunca morre
-    local neverDie = RunService.Heartbeat:Connect(function()
-        if root.Position.Y <= -245 then
-            root.CFrame = savedCFrame
-            root.Velocity = Vector3.zero
-        end
-    end)
-
-    -- Giro fing
-    local spin = RunService.Heartbeat:Connect(function(dt)
-        root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)
-    end)
-
-    -- Função pra pegar Couch novo
-    local function equipCouch()
-        local tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
-        if not tool then
-            game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer("PickingTools", "Couch")
-            repeat task.wait()
-                tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
-            until tool
-        end
-        hum:EquipTool(tool)
-        task.wait(0.1)
-    end
-
-    -- Primeiro equipa o couch
-    equipCouch()
-
-    -- Coleta alvos vivos, de pé e que ainda estão no jogo
-    local targets = {}
-    for _, plr in ipairs(game.Players:GetPlayers()) do
-        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            local tHum = plr.Character.Humanoid
-            if tHum.Health > 0 and tHum.Sit == false then
-                table.insert(targets, plr)
+        -- Persegue até sentar, algo errado acontecer ou dar o tempo limite
+        repeat      
+            tChar = plr.Character      
+            if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then break end      
+            tRoot = tChar.HumanoidRootPart      
+            tHum = tChar.Humanoid      
+      
+            if tHum.Sit or tHum.Health <= 0 then break end      
+            
+            -- Timeout check
+            if tick() - startTime > 10 then
+                timedOut = true
+                break 
             end
-        end
-    end
 
+            -- LÓGICA DO CAOS: ALEATORIEDADE (CIMA/BAIXO)
+            -- math.random() retorna entre 0 e 1. Se for maior que 0.5 vai pra cima.
+            if math.random() > 0.5 then
+                -- CIMA: 4 studs pra cima E rotaciona 180 graus (math.pi) no eixo Z pra ficar de ponta cabeça
+                root.CFrame = tRoot.CFrame * CFrame.new(0, 4, 0) * CFrame.Angles(0, 0, math.pi)
+            else
+                -- BAIXO: 4 studs pra baixo (Padrão)
+                root.CFrame = tRoot.CFrame * CFrame.new(0, -4, 0)
+            end
 
-    -- MATA TODOS
-    for i, plr in ipairs(targets) do
-        local tChar = plr.Character
-        if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then continue end -- desistiu se saiu
-        local tRoot = tChar.HumanoidRootPart
-        local tHum = tChar.Humanoid
-
-        -- Ignora completamente quem está sentado ou já morreu
-        if tHum.Health <= 0 or tHum.Sit then continue end
-
-        -- Couch novo pra cada vítima
-        equipCouch()
-
-        -- Persegue até sentar ou algo errado acontecer
-        repeat
-            tChar = plr.Character
-            if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then break end -- saiu do jogo → desiste
-            tRoot = tChar.HumanoidRootPart
-            tHum = tChar.Humanoid
-
-            if tHum.Sit or tHum.Health <= 0 then break end -- sentou ou morreu → para de perseguir
-
-            root.CFrame = tRoot.CFrame * CFrame.new(1, -4, 0)
-            root.Velocity = Vector3.zero
-            task.wait()
-        until tHum.Sit or tHum.Health <= 0 or not plr.Parent
-
-        -- Só mata se ainda estiver no jogo e sentado (não mata quem está sentado desde o início ou saiu)
-        if tHum.Sit and plr.Parent and tRoot.Parent then
-            root.CFrame = CFrame.new(root.Position.X, -200, root.Position.Z)
-            task.wait(0.5)
+            root.Velocity = Vector3.zero      
+            task.wait()      
+        until tHum.Sit or tHum.Health <= 0 or not plr.Parent      
+      
+        -- Só mata se realmente sentou e não deu timeout
+        if not timedOut and tHum.Sit and plr.Parent and tRoot.Parent then      
+            root.CFrame = CFrame.new(root.Position.X, -200, root.Position.Z)      
+            task.wait(0.5)      
+            hum:UnequipTools()      
+            task.wait(0.2)      
+            root.CFrame = savedCFrame      
+      
+            -- Deleta o Couch      
+            task.spawn(function()      
+                task.wait(0.1)      
+                pcall(function()      
+                    game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer("PlayerWantsToDeleteTool", "Couch")      
+                end)      
+                for _, obj in {char, player.Backpack, player:FindFirstChild("StarterGear")} do      
+                    if obj then      
+                        local c = obj:FindFirstChild("Couch")      
+                        if c then c:Destroy() end      
+                    end      
+                end      
+            end)      
+        else
+            -- Falhou ou Timeout
             hum:UnequipTools()
-            task.wait(0.2)
-            root.CFrame = savedCFrame
-
-            -- Deleta o Couch (mata o alvo)
-            task.spawn(function()
-                task.wait(0.1)
-                pcall(function()
-                    game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer("PlayerWantsToDeleteTool", "Couch")
-                end)
-                for _, obj in {char, player.Backpack, player:FindFirstChild("StarterGear")} do
-                    if obj then
-                        local c = obj:FindFirstChild("Couch")
-                        if c then c:Destroy() end
-                    end
-                end
-            end)
-
-            task.wait(0.3)
-        end
-    end
-
-    -- Limpeza final
-    spin:Disconnect()
-    neverDie:Disconnect()
-    hum.PlatformStand = false
-    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
-        if state ~= Enum.HumanoidStateType.None then
-            hum:SetStateEnabled(state, true)
-        end
-    end
-    p1:Destroy()
+            root.CFrame = savedCFrame 
+        end      
+      
+        -- Delay anti-lag
+        task.wait(0.4)      
+    end      
+      
+    -- Limpeza final     
+    root.CFrame = savedCFrame
+    spin:Disconnect()      
+    neverDie:Disconnect()      
+    hum.PlatformStand = false      
+    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do      
+        if state ~= Enum.HumanoidStateType.None then      
+            hum:SetStateEnabled(state, true)      
+        end      
+    end      
+    p1:Destroy()      
     p2:Destroy()
 end)
 
 killPlayerButton.MouseButton1Click:Connect(function()
+    -- Verificação básica se há um alvo selecionado
     if not jogadorSelecionado then
         return
     end
 
+    -- Serviços
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+    -- Jogador Local
+    local player = Players.LocalPlayer
     local char = player.Character or player.CharacterAdded:Wait()
     local hum = char:FindFirstChild("Humanoid")
     local root = char:FindFirstChild("HumanoidRootPart")
+
+    -- Alvo
     local targetChar = jogadorSelecionado.Character
     local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
     local targetHum = targetChar and targetChar:FindFirstChild("Humanoid")
 
+    -- Validação de existência
     if not hum or not root or not targetRoot or not targetHum then
         return
     end
 
+    -- Salva a posição original para voltar depois
     local savedCFrame = root.CFrame
+    local startTime = tick()
 
-    -- Pose rígida total
+    -- Prepara o Humanoide (Modo "PlatformStand" para não cair/tropeçar)
     hum.PlatformStand = true
     for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
         if state ~= Enum.HumanoidStateType.None then
@@ -1565,8 +1615,9 @@ killPlayerButton.MouseButton1Click:Connect(function()
         end
     end
 
-    -- Baseplates de segurança (duas camadas)
+    -- Criação das plataformas no Void para evitar cair infinitamente antes da hora
     local plate1 = Instance.new("Part")
+    plate1.Name = "VoidPlate1"
     plate1.Size = Vector3.new(400, 1, 400)
     plate1.Anchored = true
     plate1.CanCollide = true
@@ -1575,6 +1626,7 @@ killPlayerButton.MouseButton1Click:Connect(function()
     plate1.Parent = workspace
 
     local plate2 = Instance.new("Part")
+    plate2.Name = "VoidPlate2"
     plate2.Size = Vector3.new(600, 1, 600)
     plate2.Anchored = true
     plate2.CanCollide = true
@@ -1582,84 +1634,126 @@ killPlayerButton.MouseButton1Click:Connect(function()
     plate2.CFrame = CFrame.new(0, -250, 0)
     plate2.Parent = workspace
 
-    -- Garante que você nunca passe de -250
-    local neverDie = game:GetService("RunService").Heartbeat:Connect(function()
-        if root.Position.Y <= -248 then
-            root.CFrame = savedCFrame
-            root.Velocity = Vector3.new(0,0,0)
+    -- Loop de segurança para não cair do mundo acidentalmente
+    local neverDie = RunService.Heartbeat:Connect(function()
+        if root and root.Parent then
+            if root.Position.Y <= -260 then
+                root.CFrame = savedCFrame
+                root.Velocity = Vector3.new(0, 0, 0)
+                root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            end
+        else
+            if neverDie then neverDie:Disconnect() end
         end
     end)
 
-    -- Pega o Couch
+    -- Lógica para pegar a ferramenta (Couch)
     local couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
     if not couchTool then
-        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
-        repeat task.wait() couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
-        until couchTool
+        local remote = ReplicatedStorage:FindFirstChild("RE")
+        if remote and remote:FindFirstChild("1Too1l") then
+            remote["1Too1l"]:InvokeServer("PickingTools", "Couch")
+            -- Espera a ferramenta aparecer
+            local toolWaitStart = tick()
+            repeat
+                task.wait()
+                couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+            until couchTool or (tick() - toolWaitStart) > 5
+        end
     end
-    hum:EquipTool(couchTool)
 
-    -- Giro enquanto espera sentar
-    local spin = game:GetService("RunService").Heartbeat:Connect(function(dt)
-        root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)
-    end)
+    -- Equipa a ferramenta
+    if couchTool and hum then
+        hum:EquipTool(couchTool)
+    end
 
-    -- Espera o alvo sentar
-    while task.wait() do
-        if not targetRoot.Parent or not targetHum.Parent then break end
+    -- LOOP PRINCIPAL DE ATAQUE
+    while task.wait() do -- Otimizado para rodar a cada frame renderizado
+        -- Timeout de segurança (10 segundos)
+        if (tick() - startTime) > 10 then
+            break
+        end
+
+        -- Verifica se o alvo ainda existe e está vivo
+        if not targetRoot or not targetRoot.Parent or not targetHum or not targetHum.Parent or targetHum.Health <= 0 then
+            break
+        end
+
+        local x = targetRoot.Position.X
+        local z = targetRoot.Position.Z
         
-        -- ALTERAÇÃO AQUI: Removida a verificação do tornado.
-        local yOffset = -4 
-        root.CFrame = targetRoot.CFrame * CFrame.new(1, yOffset, 0)
+        -- LÓGICA DE GIRO NO EIXO Y
+        -- (tick() * 15) cria um valor que muda constantemente, gerando o giro
+        local spinAngle = (tick() * 20) 
         
-        root.Velocity = Vector3.new(0,0,0)
+        -- Alterna entre ficar um pouco acima ou um pouco abaixo do alvo para forçar colisão
+        if math.random() < 0.5 then
+            root.CFrame = CFrame.new(x, targetRoot.Position.Y - 3.5, z) * CFrame.Angles(0, spinAngle, 0)
+        else
+            root.CFrame = CFrame.new(x, targetRoot.Position.Y + 3.5, z) * CFrame.Angles(0, spinAngle, 0)
+        end
 
+        -- Zera a velocidade para evitar ser jogado longe pela física
+        root.Velocity = Vector3.new(0, 0, 0)
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+
+        -- VERIFICAÇÃO SE O ALVO SENTOU
         if targetHum.Sit then
-            spin:Disconnect()
-
-            -- VAI PRO VOID
+            -- Teleporta para o Void (-200) com o alvo sentado
             root.CFrame = CFrame.new(root.Position.X, -200, root.Position.Z)
-            root.Velocity = Vector3.new(0,0,0)
-
-            -- 0,5s segurando o Couch no void
-            task.wait(0.5)
-
-            -- SOLTA O COUCH (você vê caindo)
+            root.Velocity = Vector3.new(0, 0, 0)
+            root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            
+            -- [MODIFICAÇÃO PEDIDA]: Espera um pouco no void para o jogo carregar/sincronizar
+            task.wait(0.4) 
+            
+            -- Solta a ferramenta (derruba o alvo no void)
             hum:UnequipTools()
-
-            -- +0,2s → total 0,7s no void → VOLTA IMEDIATAMENTE
-            task.wait(0.2)
-            root.CFrame = savedCFrame
-
-            -- SÓ AGORA deleta o Couch (você já voltou, alvo cai 100%)
-            task.spawn(function()
-                task.wait(0.1)
-                pcall(function()
-                    local args = {"PlayerWantsToDeleteTool", "Couch"}
-                    game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
-                end)
-                for _, obj in {char, player.Backpack, player:FindFirstChild("StarterGear")} do
-                    if obj then
-                        local t = obj:FindFirstChild("Couch")
-                        if t then t:Destroy() end
-                    end
-                end
-            end)
-
             break
         end
     end
 
     -- Limpeza final
-    neverDie:Disconnect()
-    hum.PlatformStand = false
-    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
-        if state ~= Enum.HumanoidStateType.None then
-            hum:SetStateEnabled(state, true)
+    if neverDie then neverDie:Disconnect() end
+
+    if hum then
+        hum:UnequipTools()
+        hum.PlatformStand = false
+        -- Restaura os estados do humanoide
+        for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+            if state ~= Enum.HumanoidStateType.None then
+                hum:SetStateEnabled(state, true)
+            end
         end
     end
-    if plate1 and plate1.Parent then plate1:Destroy() end
-    if plate2 and plate2.Parent then plate2:Destroy() end
+
+    -- Retorna o jogador para a posição inicial
+    if root then
+        root.CFrame = savedCFrame
+        root.Velocity = Vector3.new(0, 0, 0)
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    end
+
+    -- Destrói as ferramentas e limpa o inventário
+    task.spawn(function()
+        task.wait(0.1)
+        local clearRemote = ReplicatedStorage:FindFirstChild("RE")
+        if clearRemote and clearRemote:FindFirstChild("1Clea1rTool1s") then
+            clearRemote["1Clea1rTool1s"]:FireServer("PlayerWantsToDeleteTool", "Couch")
+        end
+
+        local locations = {char, player.Backpack, player:FindFirstChild("StarterGear")}
+        for _, obj in pairs(locations) do
+            if obj then
+                local t = obj:FindFirstChild("Couch")
+                if t then t:Destroy() end
+            end
+        end
+    end)
+
+    -- Remove as plataformas
+    if plate1 then plate1:Destroy() end
+    if plate2 then plate2:Destroy() end
 end)
 
 
@@ -3191,13 +3285,18 @@ end)
         end
     end)
     
-    -- Toggle Best Light
+-- Toggle Best Light
 local bestLightAtivo = false
 local defaultSettings = {}
+local originalReflectance = {} -- Tabela para guardar os reflexos originais
 
--- Função para salvar os gráficos padrões
+-- Serviços
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+-- Função para salvar os gráficos e reflexos originais
 local function saveDefaultGraphics()
-	local Lighting = game:GetService("Lighting")
 	defaultSettings.Technology = Lighting.Technology
 	defaultSettings.GlobalShadows = Lighting.GlobalShadows
 	defaultSettings.ShadowSoftness = Lighting.ShadowSoftness
@@ -3211,23 +3310,25 @@ local function saveDefaultGraphics()
 	defaultSettings.FogStart = Lighting.FogStart
 	defaultSettings.FogEnd = Lighting.FogEnd
 	defaultSettings.FogColor = Lighting.FogColor
-	-- Atmosphere padrão
+
 	local atm = Lighting:FindFirstChildOfClass("Atmosphere")
 	if atm then
 		defaultSettings.Atmosphere = {
-			Density = atm.Density,
-			Offset = atm.Offset,
-			Color = atm.Color,
-			Decay = atm.Decay,
-			Glare = atm.Glare,
-			Haze = atm.Haze
+			Density = atm.Density, Offset = atm.Offset, Color = atm.Color,
+			Decay = atm.Decay, Glare = atm.Glare, Haze = atm.Haze
 		}
+	end
+
+	-- Salva o reflexo de cada parte do mapa
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			originalReflectance[obj] = obj.Reflectance
+		end
 	end
 end
 
--- Função para restaurar gráficos padrão
+-- Função para restaurar TUDO ao padrão
 local function restoreDefaultGraphics()
-	local Lighting = game:GetService("Lighting")
 	if not next(defaultSettings) then return end
 
 	Lighting.Technology = defaultSettings.Technology
@@ -3244,93 +3345,89 @@ local function restoreDefaultGraphics()
 	Lighting.FogEnd = defaultSettings.FogEnd
 	Lighting.FogColor = defaultSettings.FogColor
 
-	-- Remove Atmosphere atual
+	-- Limpa efeitos do shader
 	for _, v in ipairs(Lighting:GetChildren()) do
-		if v:IsA("Atmosphere") then v:Destroy() end
+		if v:IsA("Atmosphere") or v:IsA("SunRaysEffect") then v:Destroy() end
 	end
 
-	-- Restaura Atmosphere padrão
+	-- Restaura atmosfera
 	if defaultSettings.Atmosphere then
-		local atm = Instance.new("Atmosphere")
+		local atm = Instance.new("Atmosphere", Lighting)
 		local d = defaultSettings.Atmosphere
-		atm.Density = d.Density
-		atm.Offset = d.Offset
-		atm.Color = d.Color
-		atm.Decay = d.Decay
-		atm.Glare = d.Glare
-		atm.Haze = d.Haze
-		atm.Parent = Lighting
+		atm.Density, atm.Offset, atm.Color = d.Density, d.Offset, d.Color
+		atm.Decay, atm.Glare, atm.Haze = d.Decay, d.Glare, d.Haze
 	end
+
+	-- Restaura os reflexos originais das peças
+	for obj, value in pairs(originalReflectance) do
+		if obj and obj.Parent then
+			obj.Reflectance = value
+		end
+	end
+	originalReflectance = {} -- Limpa a tabela
 end
 
--- Função que aplica o shader Best Light
+-- Função que aplica o shader
 local function applyBestLightShader()
-	local Lighting = game:GetService("Lighting")
-	local RunService = game:GetService("RunService")
-
 	Lighting.Technology = Enum.Technology.Future
 	Lighting.GlobalShadows = true
-	Lighting.ShadowSoftness = 0.8
+	Lighting.ShadowSoftness = 1
+	Lighting.Ambient = Color3.new(0, 0, 0)
+	Lighting.OutdoorAmbient = Color3.fromRGB(12, 12, 18)
+	Lighting.Brightness = 1.5
+	Lighting.EnvironmentDiffuseScale = 0.5
+	Lighting.EnvironmentSpecularScale = 0.8
+	Lighting.ExposureCompensation = -0.2
 
-	Lighting.Ambient = Color3.fromRGB(15, 15, 15)
-	Lighting.OutdoorAmbient = Color3.fromRGB(20, 20, 20)
+	local Atmosphere = Instance.new("Atmosphere", Lighting)
+	Atmosphere.Offset = 0.5
+	Atmosphere.Glare = 0.3
+	Atmosphere.Haze = 0.6
 
-	Lighting.Brightness = 2
-	Lighting.ExposureCompensation = -0.5
-	Lighting.EnvironmentDiffuseScale = 0.35
-	Lighting.EnvironmentSpecularScale = 0.5
-	Lighting.ClockTime = 13.5
+	local SunFlare = Instance.new("SunRaysEffect", Lighting)
+	SunFlare.Intensity = 0.3
+	SunFlare.Spread = 0.8
 
-	-- Remove atmosfera anterior
-	for _, v in ipairs(Lighting:GetChildren()) do
-		if v:IsA("Atmosphere") then
-			v:Destroy()
-		end
-	end
-
-	-- Atmosfera cinematográfica
-	local Atmosphere = Instance.new("Atmosphere")
-	Atmosphere.Density = 0.03
-	Atmosphere.Offset = 0.85
-	Atmosphere.Color = Color3.fromRGB(200, 210, 220)
-	Atmosphere.Decay = Color3.fromRGB(150, 160, 170)
-	Atmosphere.Glare = 0
-	Atmosphere.Haze = 0.2
-	Atmosphere.Parent = Lighting
-
-	-- Parâmetros da neblina distante
-	Lighting.FogStart = 600
-	Lighting.FogEnd = 1400
-
-	-- Fog adaptativa ao ciclo do dia
-	if bestLightAtivo then
-		if RunService:FindFirstChild("BestLightConnection") then
-			RunService.BestLightConnection:Disconnect()
-		end
-		RunService.BestLightConnection = RunService.RenderStepped:Connect(function()
-			local t = Lighting.ClockTime
-
-			if t < 5 or t > 19 then
-				Lighting.FogColor = Color3.fromRGB(15, 18, 22)
-				Atmosphere.Color = Color3.fromRGB(60, 70, 80)
-				Atmosphere.Decay = Color3.fromRGB(20, 25, 30)
-				Atmosphere.Density = 0.025
-			elseif t < 7 or t > 17 then
-				Lighting.FogColor = Color3.fromRGB(120, 135, 150)
-				Atmosphere.Color = Color3.fromRGB(170, 185, 200)
-				Atmosphere.Decay = Color3.fromRGB(100, 115, 130)
-				Atmosphere.Density = 0.03
+	-- Aplica reflexos (Vidro/Transparente = 1 | Outros = 0.05)
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			local mat = obj.Material
+			if obj.Transparency > 0 or mat == Enum.Material.Glass or mat == Enum.Material.Water or mat == Enum.Material.Ice or mat == Enum.Material.Glacier then
+				obj.Reflectance = 1
 			else
-				Lighting.FogColor = Color3.fromRGB(190, 200, 210)
-				Atmosphere.Color = Color3.fromRGB(200, 210, 220)
-				Atmosphere.Decay = Color3.fromRGB(150, 160, 170)
-				Atmosphere.Density = 0.03
+				obj.Reflectance = 0.05
 			end
-		end)
+		end
 	end
+
+	if RunService:FindFirstChild("BestLightConnection") then
+		RunService.BestLightConnection:Disconnect()
+	end
+
+	RunService.BestLightConnection = RunService.RenderStepped:Connect(function()
+		local t = Lighting.ClockTime
+
+		if t < 5 or t > 19 then -- NOITE
+			Lighting.FogStart, Lighting.FogEnd = 5000, 15000
+			Lighting.FogColor = Color3.fromRGB(10, 10, 20)
+			Atmosphere.Color = Color3.fromRGB(40, 50, 70)
+			Atmosphere.Density = 0.01
+		elseif t < 7 or t > 17 then -- TRANSIÇÃO
+			Lighting.FogStart, Lighting.FogEnd = 2000, 8000
+			Lighting.FogColor = Color3.fromRGB(240, 240, 240)
+			Atmosphere.Color = Color3.fromRGB(255, 200, 150)
+			Atmosphere.Density = 0.02
+		else -- DIA (Sol Âmbar)
+			Lighting.FogStart, Lighting.FogEnd = 600, 1800
+			Lighting.FogColor = Color3.fromRGB(255, 255, 255)
+			Atmosphere.Color = Color3.fromRGB(255, 215, 150) -- Âmbar Intenso
+			Atmosphere.Density = 0.035
+			SunFlare.Intensity = 0.4
+		end
+	end)
 end
 
--- Conecta ao botão shadersToggle
+-- Botão
 shadersToggle.MouseButton1Click:Connect(function()
 	bestLightAtivo = not bestLightAtivo
 	shadersToggle.Text = "Best Light" .. (bestLightAtivo and " [ON]" or " [OFF]")
@@ -3338,97 +3435,15 @@ shadersToggle.MouseButton1Click:Connect(function()
 
 	if bestLightAtivo then
 		saveDefaultGraphics()
-
-		local Lighting = game:GetService("Lighting")
-		local RunService = game:GetService("RunService")
-
-		Lighting.Technology = Enum.Technology.Future
-		Lighting.GlobalShadows = true
-		Lighting.ShadowSoftness = 1
-
-		Lighting.Ambient = Color3.new(0, 0, 0)
-		Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
-
-		Lighting.Brightness = 1
-		Lighting.ExposureCompensation = -0.5
-
-		Lighting.EnvironmentDiffuseScale = 0.35
-		Lighting.EnvironmentSpecularScale = 0.5
-
-		Lighting.ClockTime = 13.5
-
-		for _, v in ipairs(Lighting:GetChildren()) do
-			if v:IsA("Atmosphere") then
-				v:Destroy()
-			end
-		end
-
-		local Atmosphere = Instance.new("Atmosphere")
-		Atmosphere.Density = 0.03
-		Atmosphere.Offset = 0.85
-		Atmosphere.Color = Color3.fromRGB(200, 210, 220)
-		Atmosphere.Decay = Color3.fromRGB(150, 160, 170)
-		Atmosphere.Glare = 0
-		Atmosphere.Haze = 0.2
-		Atmosphere.Parent = Lighting
-
-		Lighting.FogStart = 600
-		Lighting.FogEnd = 1400
-
-		local SunFlare = Instance.new("SunRaysEffect")
-		SunFlare.Name = "SunFlare"
-		SunFlare.Intensity = 0.5
-		SunFlare.Spread = 1
-		SunFlare.Parent = Lighting
-
-		game:GetService("RunService").BestLightConnection =
-			RunService.RenderStepped:Connect(function()
-				local t = Lighting.ClockTime
-
-				if t < 5 or t > 19 then
-					local increase = 0.44
-					Lighting.FogColor = Color3.fromRGB(
-						math.clamp(15 + 15*increase, 0, 255),
-						math.clamp(18 + 18*increase, 0, 255),
-						math.clamp(22 + 22*increase, 0, 255)
-					)
-					Atmosphere.Color = Color3.fromRGB(
-						math.clamp(60 + 60*increase, 0, 255),
-						math.clamp(70 + 70*increase, 0, 255),
-						math.clamp(80 + 80*increase, 0, 255)
-					)
-					Atmosphere.Decay = Color3.fromRGB(
-						math.clamp(20 + 20*increase, 0, 255),
-						math.clamp(25 + 25*increase, 0, 255),
-						math.clamp(30 + 30*increase, 0, 255)
-					)
-					Atmosphere.Density = 0.025
-
-				elseif t < 7 or t > 17 then
-					Lighting.FogColor = Color3.fromRGB(120, 135, 150)
-					Atmosphere.Color = Color3.fromRGB(170, 185, 200)
-					Atmosphere.Decay = Color3.fromRGB(100, 115, 130)
-					Atmosphere.Density = 0.03
-
-				else
-					Lighting.FogColor = Color3.fromRGB(190, 200, 210)
-					Atmosphere.Color = Color3.fromRGB(200, 210, 220)
-					Atmosphere.Decay = Color3.fromRGB(150, 160, 170)
-					Atmosphere.Density = 0.03
-
-					Lighting.Brightness = 1.2
-					Lighting.ExposureCompensation = 0.2
-					SunFlare.Intensity = 0.6
-				end
-			end)
-
+		applyBestLightShader()
 	else
 		restoreDefaultGraphics()
-		if game:GetService("RunService"):FindFirstChild("BestLightConnection") then
-			game:GetService("RunService").BestLightConnection:Disconnect()
+		if RunService:FindFirstChild("BestLightConnection") then
+			RunService.BestLightConnection:Disconnect()
 		end
 	end
 end)
+
 
 	local function killAllHub()
 		hubVisivel = false
