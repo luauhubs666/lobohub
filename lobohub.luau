@@ -388,7 +388,7 @@ tabCorner.Parent = tabContainer
 	local playerSelectButton = Instance.new("TextButton")
 	playerSelectButton.Name = "PlayerSelectButton"
 	playerSelectButton.Size = UDim2.new(1, -10, 0, 35)
-	playerSelectButton.Text = "👥 Selecionar Jogador..."
+	playerSelectButton.Text = "👥 Select Player..."
 	playerSelectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	playerSelectButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	playerSelectButton.Font = Enum.Font.SourceSansBold
@@ -763,7 +763,7 @@ end)
 		if playerList.Visible then atualizarListaJogadores() end
 		if jogadorSelecionado and removed == jogadorSelecionado then
 			jogadorSelecionado = nil
-			playerSelectButton.Text = "👥️ Selecionar Jogador..."
+			playerSelectButton.Text = "👥️ Select Player..."
 			if viewPlayerAtivo and type(desligarViewPlayer) == "function" then desligarViewPlayer() end
 		end
 	end)
