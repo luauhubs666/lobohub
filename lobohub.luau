@@ -1577,37 +1577,27 @@ killAllButton.MouseButton1Click:Connect(function()
 end)
 
 killPlayerButton.MouseButton1Click:Connect(function()
-    -- Verificação básica se há um alvo selecionado
-    if not jogadorSelecionado then
-        return
-    end
+    if not jogadorSelecionado then return end
 
-    -- Serviços
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-    -- Jogador Local
     local player = Players.LocalPlayer
     local char = player.Character or player.CharacterAdded:Wait()
     local hum = char:FindFirstChild("Humanoid")
     local root = char:FindFirstChild("HumanoidRootPart")
 
-    -- Alvo
     local targetChar = jogadorSelecionado.Character
     local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
     local targetHum = targetChar and targetChar:FindFirstChild("Humanoid")
 
-    -- Validação de existência
-    if not hum or not root or not targetRoot or not targetHum then
-        return
-    end
+    if not hum or not root or not targetRoot or not targetHum then return end
 
-    -- Salva a posição original para voltar depois
     local savedCFrame = root.CFrame
     local startTime = tick()
+    local alternarVelocidade = 4
 
-    -- Prepara o Humanoide (Modo "PlatformStand" para não cair/tropeçar)
     hum.PlatformStand = true
     for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
         if state ~= Enum.HumanoidStateType.None then
@@ -1615,135 +1605,93 @@ killPlayerButton.MouseButton1Click:Connect(function()
         end
     end
 
-    -- Criação das plataformas no Void para evitar cair infinitamente antes da hora
     local plate1 = Instance.new("Part")
-    plate1.Name = "VoidPlate1"
-    plate1.Size = Vector3.new(400, 1, 400)
-    plate1.Anchored = true
-    plate1.CanCollide = true
-    plate1.Transparency = 1
-    plate1.CFrame = CFrame.new(0, -195, 0)
-    plate1.Parent = workspace
-
+    plate1.Size = Vector3.new(400, 1, 400); plate1.Anchored = true; plate1.CanCollide = true; plate1.Transparency = 1; plate1.CFrame = CFrame.new(0, -195, 0); plate1.Parent = workspace
     local plate2 = Instance.new("Part")
-    plate2.Name = "VoidPlate2"
-    plate2.Size = Vector3.new(600, 1, 600)
-    plate2.Anchored = true
-    plate2.CanCollide = true
-    plate2.Transparency = 1
-    plate2.CFrame = CFrame.new(0, -250, 0)
-    plate2.Parent = workspace
+    plate2.Size = Vector3.new(600, 1, 600); plate2.Anchored = true; plate2.CanCollide = true; plate2.Transparency = 1; plate2.CFrame = CFrame.new(0, -250, 0); plate2.Parent = workspace
 
-    -- Loop de segurança para não cair do mundo acidentalmente
     local neverDie = RunService.Heartbeat:Connect(function()
-        if root and root.Parent then
-            if root.Position.Y <= -260 then
-                root.CFrame = savedCFrame
-                root.Velocity = Vector3.new(0, 0, 0)
-                root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            end
-        else
-            if neverDie then neverDie:Disconnect() end
+        if root and root.Parent and root.Position.Y <= -260 then
+            root.CFrame = savedCFrame
+            root.Velocity = Vector3.zero
+            root.AssemblyLinearVelocity = Vector3.zero
         end
     end)
 
-    -- Lógica para pegar a ferramenta (Couch)
     local couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
     if not couchTool then
         local remote = ReplicatedStorage:FindFirstChild("RE")
         if remote and remote:FindFirstChild("1Too1l") then
             remote["1Too1l"]:InvokeServer("PickingTools", "Couch")
-            -- Espera a ferramenta aparecer
             local toolWaitStart = tick()
-            repeat
-                task.wait()
+            repeat task.wait()
                 couchTool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
             until couchTool or (tick() - toolWaitStart) > 5
         end
     end
 
-    -- Equipa a ferramenta
-    if couchTool and hum then
-        hum:EquipTool(couchTool)
+    if couchTool and hum then 
+        hum:EquipTool(couchTool) 
     end
 
-    -- LOOP PRINCIPAL DE ATAQUE
-    while task.wait() do -- Otimizado para rodar a cada frame renderizado
-        -- Timeout de segurança (10 segundos)
-        if (tick() - startTime) > 10 then
-            break
-        end
+    while task.wait() do 
+        if (tick() - startTime) > 10 then break end 
+        if not targetRoot or not targetRoot.Parent or not targetHum or targetHum.Health <= 0 then break end
 
-        -- Verifica se o alvo ainda existe e está vivo
-        if not targetRoot or not targetRoot.Parent or not targetHum or not targetHum.Parent or targetHum.Health <= 0 then
-            break
-        end
+        local spinY = math.rad((tick() * 1500) % 360)
+        local targetPos = targetRoot.Position
+        
+        local alternar = math.sin(tick() * alternarVelocidade)
+        local isAbove = alternar > 0
+        local offsetY = isAbove and 4 or -4
 
-        local x = targetRoot.Position.X
-        local z = targetRoot.Position.Z
-        
-        -- LÓGICA DE GIRO NO EIXO Y
-        -- (tick() * 15) cria um valor que muda constantemente, gerando o giro
-        local spinAngle = (tick() * 20) 
-        
-        -- Alterna entre ficar um pouco acima ou um pouco abaixo do alvo para forçar colisão
-        if math.random() < 0.5 then
-            root.CFrame = CFrame.new(x, targetRoot.Position.Y - 3.5, z) * CFrame.Angles(0, spinAngle, 0)
+        if isAbove then
+            root.CFrame = CFrame.new(targetPos.X, targetPos.Y + offsetY, targetPos.Z) * CFrame.Angles(math.pi, spinY, 0)
         else
-            root.CFrame = CFrame.new(x, targetRoot.Position.Y + 3.5, z) * CFrame.Angles(0, spinAngle, 0)
+            root.CFrame = CFrame.new(targetPos.X, targetPos.Y + offsetY, targetPos.Z) * CFrame.Angles(0, spinY, 0)
         end
+        
+        root.Velocity = Vector3.zero
+        root.AssemblyLinearVelocity = Vector3.zero
 
-        -- Zera a velocidade para evitar ser jogado longe pela física
-        root.Velocity = Vector3.new(0, 0, 0)
-        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-
-        -- VERIFICAÇÃO SE O ALVO SENTOU
         if targetHum.Sit then
-            -- Teleporta para o Void (-200) com o alvo sentado
             root.CFrame = CFrame.new(root.Position.X, -200, root.Position.Z)
-            root.Velocity = Vector3.new(0, 0, 0)
-            root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            
-            -- [MODIFICAÇÃO PEDIDA]: Espera um pouco no void para o jogo carregar/sincronizar
-            task.wait(0.4) 
-            
-            -- Solta a ferramenta (derruba o alvo no void)
+            root.Velocity = Vector3.zero
+            root.AssemblyLinearVelocity = Vector3.zero
+            task.wait(0.8)
             hum:UnequipTools()
             break
         end
     end
 
-    -- Limpeza final
     if neverDie then neverDie:Disconnect() end
 
-    if hum then
+    local safetyChecks = 0
+    while char:FindFirstChild("Couch") and safetyChecks < 30 do
         hum:UnequipTools()
-        hum.PlatformStand = false
-        -- Restaura os estados do humanoide
-        for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
-            if state ~= Enum.HumanoidStateType.None then
-                hum:SetStateEnabled(state, true)
-            end
+        task.wait()
+        safetyChecks = safetyChecks + 1
+    end
+
+    hum.PlatformStand = false
+    for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+        if state ~= Enum.HumanoidStateType.None then
+            hum:SetStateEnabled(state, true)
         end
     end
 
-    -- Retorna o jogador para a posição inicial
-    if root then
-        root.CFrame = savedCFrame
-        root.Velocity = Vector3.new(0, 0, 0)
-        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-    end
+    task.wait()
+    root.CFrame = savedCFrame
+    root.Velocity = Vector3.zero
+    root.AssemblyLinearVelocity = Vector3.zero
 
-    -- Destrói as ferramentas e limpa o inventário
     task.spawn(function()
-        task.wait(0.1)
+        task.wait()
         local clearRemote = ReplicatedStorage:FindFirstChild("RE")
         if clearRemote and clearRemote:FindFirstChild("1Clea1rTool1s") then
             clearRemote["1Clea1rTool1s"]:FireServer("PlayerWantsToDeleteTool", "Couch")
         end
-
-        local locations = {char, player.Backpack, player:FindFirstChild("StarterGear")}
-        for _, obj in pairs(locations) do
+        for _, obj in pairs({char, player.Backpack, player:FindFirstChild("StarterGear")}) do
             if obj then
                 local t = obj:FindFirstChild("Couch")
                 if t then t:Destroy() end
@@ -1751,11 +1699,9 @@ killPlayerButton.MouseButton1Click:Connect(function()
         end
     end)
 
-    -- Remove as plataformas
     if plate1 then plate1:Destroy() end
     if plate2 then plate2:Destroy() end
 end)
-
 
 -- BringPlayer lógica
 bringPlayerButton.MouseButton1Click:Connect(function()
