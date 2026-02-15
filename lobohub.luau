@@ -1744,12 +1744,23 @@ bringPlayerButton.MouseButton1Click:Connect(function()
         root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)
     end)
 
+    local startTime = tick() -- Marca o tempo de início para o timeout
+
     -- Espera o alvo sentar
     while task.wait() do
         if not targetRoot.Parent or not targetHum.Parent then break end
         
-        -- Garante que o player está posicionado para forçar o assento
-        root.CFrame = targetRoot.CFrame * CFrame.new(1, -4, 0)
+        -- Timeout: Se passar de 10 segundos, desiste
+        if tick() - startTime > 10 then
+            if spin then spin:Disconnect() end
+            root.CFrame = savedCFrame -- Volta para posição original
+            hum:UnequipTools() -- Solta a ferramenta
+            break
+        end
+
+        -- Garante que o player está posicionado para forçar o assento (Com randomização de altura)
+        -- Teleporta +4 metros acima e -4 abaixo de forma aleatória
+        root.CFrame = targetRoot.CFrame * CFrame.new(1, math.random(-4, 4), 0)
         root.Velocity = Vector3.new(0,0,0)
 
         if targetHum.Sit then
@@ -1791,98 +1802,129 @@ bringPlayerButton.MouseButton1Click:Connect(function()
     end
 end)
 
+bringAllButton.MouseButton1Click:Connect(function()
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hum = char:WaitForChild("Humanoid")
+    local root = char:WaitForChild("HumanoidRootPart")
+    local RunService = game:GetService("RunService")
+    local savedCFrame = root.CFrame
 
-bringAllButton.MouseButton1Click:Connect(function() local player = game.Players.LocalPlayer local char = player.Character or player.CharacterAdded:Wait() local hum = char:WaitForChild("Humanoid") local root = char:WaitForChild("HumanoidRootPart") local RunService = game:GetService("RunService")
-local savedCFrame = root.CFrame
+    -- Giro (Fling) - Mantido para a física de empurrão
+    local spin = RunService.Heartbeat:Connect(function(dt)
+        root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)
+    end)
 
--- Giro fing (mantido por enquanto, mas pode ser removido se for considerado proteção)
-local spin = RunService.Heartbeat:Connect(function(dt)
-    root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(3000)*dt, 0)
-end)
-
--- Função pra pegar Couch novo
-local function equipCouch()
-    local tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
-    if not tool then
-        game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer("PickingTools", "Couch")
-        repeat task.wait()
-            tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
-        until tool
+    -- Função pra pegar Couch
+    local function equipCouch()
+        local tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+        if not tool then
+            game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer("PickingTools", "Couch")
+            repeat task.wait()
+                tool = char:FindFirstChild("Couch") or player.Backpack:FindFirstChild("Couch")
+            until tool
+        end
+        hum:EquipTool(tool)
+        task.wait(0.2) -- Delay leve para garantir o equip
+        return tool
     end
-    hum:EquipTool(tool)
-    task.wait(0.1)
-end
 
--- Primeiro equipa o couch
-equipCouch()
-
--- Coleta alvos vivos, de pé e que ainda estão no jogo
-local targets = {}
-for _, plr in ipairs(game.Players:GetPlayers()) do
-    if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-        local tHum = plr.Character.Humanoid
-        if tHum.Health > 0 and tHum.Sit == false then
-            table.insert(targets, plr)
+    -- Coleta alvos
+    local targets = {}
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local tHum = plr.Character:FindFirstChild("Humanoid")
+            if tHum and tHum.Health > 0 and tHum.Sit == false then
+                table.insert(targets, plr)
+            end
         end
     end
-end
 
--- TRÁS TODOS
-for i, plr in ipairs(targets) do
-    local tChar = plr.Character
-    if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then continue end -- desistiu se saiu
-    local tRoot = tChar.HumanoidRootPart
-    local tHum = tChar.Humanoid
+    -- LOOP PRINCIPAL
+    for i, plr in ipairs(targets) do
+        local tChar = plr.Character
+        if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then continue end 
+        
+        local tRoot = tChar.HumanoidRootPart
+        local tHum = tChar.Humanoid
+        if tHum.Health <= 0 or tHum.Sit then continue end
 
-    -- Ignora completamente quem está sentado ou já morreu
-    if tHum.Health <= 0 or tHum.Sit then continue end
+        local currentTool = equipCouch()
+        local startTime = tick()
+        local lastMoveTime = 0
 
-    -- Couch novo pra cada vítima
-    equipCouch()
+        -- Perseguição Orbitando LENTAMENTE
+        repeat
+            tChar = plr.Character
+            if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then break end 
+            tRoot = tChar.HumanoidRootPart
+            tHum = tChar.Humanoid
 
-    -- Persegue até sentar, com timeout de 10 segundos
-    local startTime = tick()
-    repeat
-        tChar = plr.Character
-        if not tChar or not tChar:FindFirstChild("HumanoidRootPart") or not plr.Parent then break end -- saiu do jogo → desiste
-        tRoot = tChar.HumanoidRootPart
-        tHum = tChar.Humanoid
+            if tHum.Sit or tHum.Health <= 0 then break end 
 
-        if tHum.Sit or tHum.Health <= 0 then break end -- sentou ou morreu → para de perseguir
-
-        root.CFrame = tRoot.CFrame * CFrame.new(1, -4, 0)
-        root.Velocity = Vector3.zero
-        task.wait()
-    until tHum.Sit or tHum.Health <= 0 or not plr.Parent or (tick() - startTime > 10)
-
-    -- Só traz se ainda estiver no jogo e sentou (ignora timeout ou quem estava sentado/saiu)
-    if tHum.Sit and plr.Parent and tRoot.Parent and (tick() - startTime <= 10) then
-        root.CFrame = savedCFrame
-        task.wait(0.5)
-        hum:UnequipTools()
-        task.wait(0.2)
-
-        -- Deleta o Couch (limpa, mas sem matar pois não há void)
-        task.spawn(function()
-            task.wait(0.1)
-            pcall(function()
-                game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer("PlayerWantsToDeleteTool", "Couch")
-            end)
-            for _, obj in {char, player.Backpack, player:FindFirstChild("StarterGear")} do
-                if obj then
-                    local c = obj:FindFirstChild("Couch")
-                    if c then c:Destroy() end
-                end
+            -- Trava a pose ereta (Para todas as animações)
+            for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+                track:Stop()
             end
-        end)
 
-        task.wait(0.3)
+            -- Troca de posição a cada 0.5s (Órbita mais lenta para o servidor identificar)
+            if tick() - lastMoveTime >= 0.5 then
+                local randomOffset = Vector3.new(
+                    math.random(-25, 25)/10, 
+                    math.random(-25, 25)/10, 
+                    math.random(-25, 25)/10
+                )
+                local targetPos = tRoot.Position + randomOffset
+                
+                -- Aponta os PÉS para o alvo
+                root.CFrame = CFrame.lookAt(targetPos, tRoot.Position) * CFrame.Angles(math.rad(90), 0, 0)
+                
+                lastMoveTime = tick()
+            end
+            
+            root.Velocity = Vector3.zero
+            task.wait()
+        until tHum.Sit or tHum.Health <= 0 or not plr.Parent or (tick() - startTime > 12)
+
+        -- SEQUÊNCIA DE FINALIZAÇÃO (LENTA E CLARA)
+        if tHum.Sit or (tick() - startTime > 12) then
+            -- 1. Teleporta de volta para a coordenada gravada
+            root.CFrame = savedCFrame
+            
+            -- 2. ESPERA 0.5 SEGUNDOS (Obrigatório conforme pedido)
+            task.wait(0.5)
+            
+            -- 3. Tira a ferramenta da mão
+            hum:UnequipTools()
+            if currentTool then
+                currentTool.Parent = player.Backpack
+            end
+            
+            -- 4. ESPERA 1.2 SEGUNDOS (Aumentado para "Demorar" e não ser instantâneo)
+            task.wait(1.2)
+        end
     end
-end
 
--- Limpeza final
-spin:Disconnect()
+    -- FINALIZAÇÃO GERAL
+    spin:Disconnect()
+    hum:UnequipTools()
+
+    task.spawn(function()
+        task.wait(0.1)
+        pcall(function()
+            game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer("PlayerWantsToDeleteTool", "Couch")
+        end)
+        for _, obj in {char, player.Backpack, player:FindFirstChild("StarterGear")} do
+            if obj then
+                local c = obj:FindFirstChild("Couch")
+                if c then c:Destroy() end
+            end
+        end
+    end)
+    
+    root.CFrame = savedCFrame
 end)
+
 
 puxarPartsToggle.MouseButton1Click:Connect(function()
 
