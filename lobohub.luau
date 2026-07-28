@@ -98,10 +98,11 @@ local function iniciarHub()
 
 	local toggleBotao = Instance.new("ImageButton")
 	toggleBotao.Name = "ToggleBotao"
-	toggleBotao.Image = "rbxassetid://99792331635156" -- ID da imagem do toggle
+	toggleBotao.Image = "rbxassetid://99792331635156"
 	toggleBotao.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	toggleBotao.Size = UDim2.new(0, 50, 0, 50)
 	toggleBotao.Position = UDim2.new(0, 10, 0.5, -25)
+	toggleBotao.Active = true
 	toggleBotao.Draggable = true
 	toggleBotao.ZIndex = 100
 	toggleBotao.Parent = loboHubGui
@@ -117,6 +118,7 @@ local function iniciarHub()
 	mainFrame.Position = UDim2.new(0.5, -250, 0.5, -230)
 	mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 	mainFrame.Visible = false
+	mainFrame.Active = true
 	mainFrame.Draggable = true
 	mainFrame.Parent = loboHubGui
 	trackGui(mainFrame)
@@ -133,13 +135,13 @@ local function iniciarHub()
 	trackGui(header)
 	
 	local headerCorner = Instance.new("UICorner")
-headerCorner.CornerRadius = UDim.new(0, 12) -- 12 = arredondado suave
-headerCorner.Parent = header
+	headerCorner.CornerRadius = UDim.new(0, 12)
+	headerCorner.Parent = header
 
 	local titulo = Instance.new("TextLabel")
 	titulo.Name = "Titulo"
 	titulo.Size = UDim2.new(1, 0, 1, 0)
-	titulo.Text = "Lobo Hub [DEMO]"
+	titulo.Text = "Lobo Hub [V1]"
 	titulo.TextColor3 = Color3.fromRGB(255, 0, 255)
 	titulo.Font = Enum.Font.SourceSansBold
 	titulo.TextScaled = true
@@ -189,8 +191,8 @@ headerCorner.Parent = header
 	trackGui(tabContainer)
 	
 	local tabCorner = Instance.new("UICorner")
-tabCorner.CornerRadius = UDim.new(0, 12)
-tabCorner.Parent = tabContainer
+	tabCorner.CornerRadius = UDim.new(0, 12)
+	tabCorner.Parent = tabContainer
 
 	local tabLayout = Instance.new("UIListLayout")
 	tabLayout.Padding = UDim.new(0, 5)
@@ -301,12 +303,14 @@ tabCorner.Parent = tabContainer
 	discordButton.Parent = pageBemVindo
 	trackGui(discordButton)
 
-    -- Página Player
-	local pagePlayer = Instance.new("Frame")
+	-- Página Player
+	local pagePlayer = Instance.new("ScrollingFrame")
 	pagePlayer.Name = "Page_Player"
 	pagePlayer.Size = UDim2.new(1, 0, 1, 0)
 	pagePlayer.BackgroundTransparency = 1
 	pagePlayer.Visible = false
+	pagePlayer.CanvasSize = UDim2.new(0, 0, 0, 1000) -- Altere este '1000' para aumentar ou diminuir a área de rolagem
+	pagePlayer.ScrollBarThickness = 6
 	pagePlayer.Parent = pageContainer
 	trackGui(pagePlayer)
 
@@ -314,6 +318,8 @@ tabCorner.Parent = tabContainer
 	pagePlayerLayout.Padding = UDim.new(0, 8)
 	pagePlayerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	pagePlayerLayout.Parent = pagePlayer
+
+
 
 	local pageTroll =
  Instance.new("ScrollingFrame")
@@ -426,18 +432,102 @@ tabCorner.Parent = tabContainer
 	end
 
 -- Opções
-	local espToggle = makeFuncButton(pagePlayer, "ꙮ ESP [OFF]", Color3.fromRGB(30, 30, 30))
-	local clickTPToggle = makeFuncButton(pagePlayer, "👆 Click TP [OFF]", Color3.fromRGB(30, 30, 30))
-	local noclipToggle = makeFuncButton(pagePlayer, "⿻ Noclip [OFF]", Color3.fromRGB(30, 30, 30))
-	local shiftLockToggle = makeFuncButton(pagePlayer, "🔒 Shift Lock [OFF]", Color3.fromRGB(30, 30, 30))
-	local infiniteJumpToggle = makeFuncButton(pagePlayer, "∞ Pulo Infinito [OFF]", Color3.fromRGB(30, 30, 30))
+	local espToggle = makeFuncButton(pagePlayer, "👁 ESP <off>", Color3.fromRGB(30, 30, 30))
+	local clickTPToggle = makeFuncButton(pagePlayer, "👆 Click TP <off>", Color3.fromRGB(30, 30, 30))
+	local noclipToggle = makeFuncButton(pagePlayer, "⿻ Noclip <off>", Color3.fromRGB(30, 30, 30))
+	local iyToggle = makeFuncButton(pagePlayer, "🔗Infinite Yield <tap>", Color3.fromRGB(30, 30, 30))
+		-- Botão de executar o IY
+		iyToggle.MouseButton1Click:Connect(function()
+		loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-IY-27798"))()
+	end)
+	local shiftLockToggle = makeFuncButton(pagePlayer, "🔒 Shift Lock <off>", Color3.fromRGB(30, 30, 30))
+	local infiniteJumpToggle = makeFuncButton(pagePlayer, "∞ Pulo Infinito <off>", Color3.fromRGB(30, 30, 30))
     local BuracoNegroBodyToggle = makeFuncButton(pagePlayer,"🌪 BlackHole (InMe)", Color3.fromRGB(30, 30, 30))
     local puxarPartsToggle = makeFuncButton(pagePlayer,"🌪 BlackHole (Alvo)", Color3.fromRGB(30, 30, 30))
-    local AntiSitToggle = makeFuncButton(pageProtecoes,"🪑🚫 AntiSit [OFF]", Color3.fromRGB(30, 30, 30))
-	local dynamicShadowsToggle = makeFuncButton(pageClient, "Shadows [ON]", Color3.fromRGB(30, 30, 30))
-	local shadersToggle = makeFuncButton(pageClient, "Best Light [OFF]", Color3.fromRGB(30, 30, 30))
+    local AntiSitToggle = makeFuncButton(pageProtecoes,"🪑🚫 AntiSit <off>", Color3.fromRGB(30, 30, 30))
+    local PerformanceToggle = makeFuncButton(pageClient," 🔧 Otimizar <tap>", Color3.fromRGB(30, 30, 30))
+    -- Variável para evitar que o jogador clique várias vezes e trave o jogo
+local jaOtimizado = false 
+
+local function OtimizarJogoExtremo()
+    if jaOtimizado then return end
+    jaOtimizado = true
+
+    print("Iniciando Otimização Extrema...")
+
+    -- 1. Otimização do Lighting (Iluminação)
+    game.Lighting.GlobalShadows = false
+    game.Lighting.FogEnd = 9e9
+    game.Lighting.ShadowSoftness = 0
+    
+    -- Desativa todos os efeitos de pós-processamento (Blur, Bloom, SunRays, etc)
+    for _, effect in ipairs(game.Lighting:GetDescendants()) do
+        if effect:IsA("PostEffect") or effect:IsA("BlurEffect") or effect:IsA("SunRaysEffect") or effect:IsA("ColorCorrectionEffect") or effect:IsA("BloomEffect") or effect:IsA("DepthOfFieldEffect") then
+            effect.Enabled = false
+        end
+    end
+
+    -- 2. Otimização do Terreno (Água)
+    local terrain = workspace:FindFirstChildOfClass("Terrain")
+    if terrain then
+        terrain.WaterWaveSize = 0
+        terrain.WaterWaveSpeed = 0
+        terrain.WaterReflectance = 0
+        terrain.WaterTransparency = 0
+        pcall(function() terrain.Decoration = false end) -- Desativa grama realista
+    end
+
+    -- 3. Otimização do Workspace (Peças, Texturas e Partículas)
+    local descendants = workspace:GetDescendants()
+    
+    for i, obj in ipairs(descendants) do
+        -- Altera peças para o material mais leve e desativa sombras/reflexos
+        if obj:IsA("BasePart") then
+            obj.Material = Enum.Material.SmoothPlastic
+            obj.CastShadow = false
+            obj.Reflectance = 0
+        end
+
+        -- Desativa partículas e efeitos visuais
+        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
+            obj.Enabled = false
+        end
+
+        -- Oculta texturas e decalques (Extremo)
+        if obj:IsA("Decal") or obj:IsA("Texture") then
+            obj.Transparency = 1
+        end
+
+        -- Sistema de segurança: Pausa minimamente a cada 500 objetos
+        if i % 500 == 0 then
+            task.wait()
+        end
+    end
+
+    -- 4. Otimização Contínua (Para objetos que carregam depois)
+    workspace.DescendantAdded:Connect(function(obj)
+        if obj:IsA("BasePart") then
+            obj.Material = Enum.Material.SmoothPlastic
+            obj.CastShadow = false
+            obj.Reflectance = 0
+        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
+            obj.Enabled = false
+        elseif obj:IsA("Decal") or obj:IsA("Texture") then
+            obj.Transparency = 1
+        end
+    end)
+    
+    print("Otimização Extrema Concluída!")
+end
+
+-- Conecta a função de otimização ao seu botão já existente
+-- Nota: Caso a sua biblioteca de UI exija outro método de clique (como .OnFire ou .Callback), basta trocar o "MouseButton1Click" abaixo.
+PerformanceToggle.MouseButton1Click:Connect(OtimizarJogoExtremo)
+
+	local dynamicShadowsToggle = makeFuncButton(pageClient, "Shadows <on>", Color3.fromRGB(30, 30, 30))
+	local shadersToggle = makeFuncButton(pageClient, "Best Light <off>", Color3.fromRGB(30, 30, 30))
 	
-	
+
 	local flightFrame = Instance.new("Frame")
 	flightFrame.Size = UDim2.new(1, -10, 0, 35)
 	flightFrame.BackgroundTransparency = 1
@@ -499,15 +589,15 @@ tabCorner.Parent = tabContainer
 
 	local tpToPlayerButton = makeFuncButton(pageTroll, "➡️ Go to Player")
 	local tpBackButton = makeFuncButton(pageTroll, "⬅️ Come Back")
-	local viewPlayerButton = makeFuncButton(pageTroll, "🔍View Player [OFF]")
-	local killPlayerButton = makeFuncButton(pageTroll, "Kill Player")
-    local killAllButton = makeFuncButton(pageTroll, "Kill All")
-    local bringPlayerButton = makeFuncButton(pageTroll, "Bring Player")
-    local bringAllButton = makeFuncButton(pageTroll, "Bring All")
+	local viewPlayerButton = makeFuncButton(pageTroll, "🔍View Player <off>")
+	local killPlayerButton = makeFuncButton(pageTroll, "Kill Player <tap>")
+    local killAllButton = makeFuncButton(pageTroll, "Kill All <tap>")
+    local bringPlayerButton = makeFuncButton(pageTroll, "Bring Player <tap>")
+    local bringAllButton = makeFuncButton(pageTroll, "Bring All <tap>")
 	local debugToggle = Instance.new("TextButton")
 	debugToggle.Name = "DebugToggle"
 	debugToggle.Size = UDim2.new(1, -10, 0, 35) -- Ajuste de layout
-	debugToggle.Text = "⚙️ Mostrar Debug [OFF]"
+	debugToggle.Text = "⚙️ Mostrar Debug <off>"
 	debugToggle.TextColor3 = Color3.fromRGB(200,70,70)
 	debugToggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
 	debugToggle.Font = Enum.Font.SourceSansBold
@@ -687,7 +777,7 @@ end)
 	end
 
 	discordButton.MouseButton1Click:Connect(function()
-		local link = "https://discord.gg/BfMkzJhZe"
+		local link = "https://discord.gg/crq2dddRK"
 		local copied = false
 		local ok1 = pcall(function()
 			if TextService and typeof(TextService.SetClipboardAsync) == "function" then
@@ -777,61 +867,115 @@ end)
 		table.clear(espInstancias)
 	end
 
-	local function criarESP(targetPlayer)
-		local char = targetPlayer.Character
-		if not char then return end
-		local highlight = Instance.new("Highlight")
-		highlight.FillTransparency = 1
-		-- Cor e aparência do ESP
-		highlight.OutlineColor = Color3.fromRGB(100, 200, 255)
-		highlight.OutlineTransparency = 0
-		highlight.Parent = char
-		table.insert(espInstancias, highlight)
+	-- Tabela para rastrear os ESPs ativos por jogador para não recriar
+local espCache = {}
 
-		local head = char:FindFirstChild("Head")    
-		if not head then return end    
-		local billGui = Instance.new("BillboardGui")    
-		billGui.Name = "ESP_Name"    
-		billGui.Adornee = head    
-		billGui.Size = UDim2.new(0, 200, 0, 50)    
-		billGui.StudsOffset = Vector3.new(0, 2.5, 0)    
-		billGui.AlwaysOnTop = true    
-		billGui.Parent = head    
-		local textLabel = Instance.new("TextLabel")    
-		textLabel.Text = "" .. targetPlayer.Name    
-		textLabel.Size = UDim2.new(1, 0, 1, 0)    
-		textLabel.BackgroundTransparency = 1    
-		-- Cor do texto do ESP
-		textLabel.TextColor3 = Color3.fromRGB(100, 200, 255)    
-		textLabel.TextScaled = false
-		textLabel.TextSize = 12 
-		textLabel.Font = Enum.Font.SourceSansBold    
-		textLabel.Parent = billGui    
-		table.insert(espInstancias, billGui)
+-- Função para remover o ESP de um jogador específico
+local function removerESP(targetPlayer)
+	if espCache[targetPlayer] then
+		for _, obj in ipairs(espCache[targetPlayer]) do
+			pcall(function() obj:Destroy() end)
+		end
+		espCache[targetPlayer] = nil
+	end
+end
+
+-- Função para limpar todos os ESPs
+local function limparESPCompleto()
+	for _, targetPlayer in ipairs(Players:GetPlayers()) do
+		removerESP(targetPlayer)
+	end
+	espCache = {}
+end
+
+-- Função para criar o ESP apenas se ele já não existir para aquele jogador
+local function criarESP(targetPlayer)
+	if targetPlayer == player then return end
+	local char = targetPlayer.Character
+	if not char or not char:FindFirstChild("Head") or not char:FindFirstChild("HumanoidRootPart") then 
+		return 
 	end
 
-    -- Lógica do ESP
-	espToggle.MouseButton1Click:Connect(function()
-		espAtivo = not espAtivo
-		espToggle.Text = "ꙮ ESP" .. (espAtivo and " [ON]" or " [OFF]")
-		setToggleColor(espToggle, espAtivo)
-		if espAtivo then
-			if espConnection then safeDisconnect(espConnection); espConnection = nil end
-			espConnection = RunService.RenderStepped:Connect(function()
-				if not espAtivo then return end
-				limparESP()
-				for _, p in ipairs(Players:GetPlayers()) do
-					if p ~= player and p.Character then
-						criarESP(p)
-					end
+	-- Se já existe um ESP para esse player, não recria
+	if espCache[targetPlayer] then return end
+
+	local itensCriados = {}
+
+	-- Highlight
+	local highlight = Instance.new("Highlight")
+	highlight.FillTransparency = 1
+	highlight.OutlineColor = Color3.fromRGB(100, 200, 255)
+	highlight.OutlineTransparency = 0
+	highlight.Parent = char
+	table.insert(itensCriados, highlight)
+
+	-- BillboardGui (Nome)
+	local head = char.Head
+	local billGui = Instance.new("BillboardGui")    
+	billGui.Name = "ESP_Name"    
+	billGui.Adornee = head    
+	billGui.Size = UDim2.new(0, 200, 0, 50)    
+	billGui.StudsOffset = Vector3.new(0, 2.5, 0)    
+	billGui.AlwaysOnTop = true    
+	billGui.Parent = head    
+
+	local textLabel = Instance.new("TextLabel")    
+	textLabel.Text = targetPlayer.Name    
+	textLabel.Size = UDim2.new(1, 0, 1, 0)    
+	textLabel.BackgroundTransparency = 1    
+	textLabel.TextColor3 = Color3.fromRGB(100, 200, 255)    
+	textLabel.TextScaled = false
+	textLabel.TextSize = 12 
+	textLabel.Font = Enum.Font.SourceSansBold    
+	textLabel.Parent = billGui    
+	table.insert(itensCriados, billGui)
+
+	espCache[targetPlayer] = itensCriados
+end
+
+-- Lógica do Botão do ESP otimizada
+espToggle.MouseButton1Click:Connect(function()
+	espAtivo = not espAtivo
+	espToggle.Text = "👁 ESP" .. (espAtivo and " <on>" or " <off>")
+	setToggleColor(espToggle, espAtivo)
+
+	if espAtivo then
+		-- Cria o ESP para quem já está no jogo
+		for _, p in ipairs(Players:GetPlayers()) do
+			criarESP(p)
+		end
+
+		-- Conecta para adicionar o ESP em novos jogadores que entrarem
+		if espConnection then safeDisconnect(espConnection); espConnection = nil end
+		espConnection = Players.PlayerAdded:Connect(function(p)
+			p.CharacterAdded:Connect(function()
+				if espAtivo then
+					task.wait(1) -- Pequeno delay para o character carregar
+					criarESP(p)
 				end
 			end)
-			trackConnection(espConnection)
-		else
-			limparESP()
-			if espConnection then safeDisconnect(espConnection); espConnection = nil end
+		end)
+		trackConnection(espConnection)
+
+		-- Monitora caso o personagem morra/respawne (opcional, mas garante que o ESP recrie no novo corpo)
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= player then
+				p.CharacterAdded:Connect(function()
+					if espAtivo then
+						task.wait(1)
+						removerESP(p)
+						criarESP(p)
+					end
+				end)
+			end
 		end
-	end)
+
+	else
+		-- Desliga o ESP e limpa tudo da memória
+		limparESPCompleto()
+		if espConnection then safeDisconnect(espConnection); espConnection = nil end
+	end
+end)
 
 -- Função que detecta clique ou toque e teleporta
 local function onClickToTeleport(input, gameProcessed)
@@ -900,7 +1044,7 @@ end
 clickTPToggle.MouseButton1Click:Connect(function()
 	clickTpAtivo = not clickTpAtivo
 	local base = "👆 Click TP"
-	clickTPToggle.Text = base .. (clickTpAtivo and " [ON]" or " [OFF]")
+	clickTPToggle.Text = base .. (clickTpAtivo and " <on>" or " <off>")
 	setToggleColor(clickTPToggle, clickTpAtivo)
 
 	if clickTpAtivo then
@@ -913,7 +1057,7 @@ end)
 	noclipToggle.MouseButton1Click:Connect(function()
 		noclipAtivo = not noclipAtivo
 		local base = "⿻ Noclip"
-		noclipToggle.Text = base .. (noclipAtivo and " [ON]" or " [OFF]")
+		noclipToggle.Text = base .. (noclipAtivo and " <on>" or " <off>")
 		setToggleColor(noclipToggle, noclipAtivo)
 		local char = player.Character
 		
@@ -921,7 +1065,7 @@ end)
 			if noclipAtivo then
 			end
 			noclipAtivo = false
-			noclipToggle.Text = base .. " [OFF]"
+			noclipToggle.Text = base .. " <off>"
 			setToggleColor(noclipToggle, noclipAtivo)
 			stopNoclipForce()
 			return 
@@ -948,7 +1092,7 @@ end)
 	-- Lógica do infinite jump
 	infiniteJumpToggle.MouseButton1Click:Connect(function()
 		infiniteJumpAtivo = not infiniteJumpAtivo
-		infiniteJumpToggle.Text = "∞ Pulo Infinito " .. (infiniteJumpAtivo and "[ON]" or "[OFF]")
+		infiniteJumpToggle.Text = "∞ Pulo Infinito " .. (infiniteJumpAtivo and "<on>" or "<off>")
 		setToggleColor(infiniteJumpToggle, infiniteJumpAtivo)
 
 		if infiniteJumpAtivo then
@@ -968,7 +1112,7 @@ end)
 -- Lógica do AntiSit	
 AntiSitToggle.MouseButton1Click:Connect(function()
 	AntiSitAtivo = not AntiSitAtivo
-	AntiSitToggle.Text = "🪑🚫 AntiSit " .. (AntiSitAtivo and "[ON]" or "[OFF]")
+	AntiSitToggle.Text = "🪑🚫 AntiSit " .. (AntiSitAtivo and "<on>" or "<off>")
 	setToggleColor(AntiSitToggle, AntiSitAtivo)
 
 	if AntiSitAtivo then
@@ -1095,7 +1239,7 @@ end)
 		end
 	end)
 
-	dynamicShadowsToggle.Text = "Shadows [ON]"
+	dynamicShadowsToggle.Text = "Shadows <on>"
 	setToggleColor(dynamicShadowsToggle, false)
 
 	dynamicShadowsToggle.MouseButton1Click:Connect(function()
@@ -1109,7 +1253,7 @@ end)
 					obj.CastShadow = false
 				end
 			end
-			dynamicShadowsToggle.Text = "Shadows [OFF]"
+			dynamicShadowsToggle.Text = "Shadows <off>"
 			setToggleColor(dynamicShadowsToggle, true)
 		else
 			local Lighting = game:GetService("Lighting")
@@ -1119,7 +1263,7 @@ end)
 					obj.CastShadow = true
 				end
 			end
-			dynamicShadowsToggle.Text = "Shadows [ON]"
+			dynamicShadowsToggle.Text = "Shadows <on>"
 			setToggleColor(dynamicShadowsToggle, false)
 		end
 	end)
@@ -1274,7 +1418,7 @@ end)
 			if localHum then pcall(function() camera.CameraSubject = localHum; camera.CameraType = Enum.CameraType.Custom end) end
 		end
 		viewPlayerAtivo = false
-		viewPlayerButton.Text = "🔍 View Player [OFF]"
+		viewPlayerButton.Text = "🔍 View Player <off>"
 		setToggleColor(viewPlayerButton, false)
 		if viewConnection then safeDisconnect(viewConnection); viewConnection = nil end
 	end
@@ -1288,7 +1432,7 @@ end)
 		cameraBackupType = camera.CameraType
 		pcall(function() camera.CameraSubject = targetHumanoid; camera.CameraType = Enum.CameraType.Custom end)
 		viewPlayerAtivo = true
-		viewPlayerButton.Text = "🔍 View Player [ON]"
+		viewPlayerButton.Text = "🔍 View Player <on>"
 		setToggleColor(viewPlayerButton, true)
             -- Reconectar a câmera de view mesmo após a morte do alvo
 		viewConnection = RunService.RenderStepped:Connect(function()
@@ -1375,7 +1519,7 @@ end)
 	debugToggle.MouseButton1Click:Connect(function()
 		if not debugAtivo then
 			debugAtivo = true
-			debugToggle.Text = "⚙️ Mostrar Debug [ON]"
+			debugToggle.Text = "⚙️ Mostrar Debug <on>"
 			debugOverlay.Visible = true
 			if debugConnection then safeDisconnect(debugConnection); debugConnection = nil end
 			debugConnection = RunService.RenderStepped:Connect(function(dt)
@@ -1387,7 +1531,7 @@ end)
 			trackConnection(debugConnection)
 		else
 			debugAtivo = false
-			debugToggle.Text = "⚙️ Mostrar Debug [OFF]"
+			debugToggle.Text = "⚙️ Mostrar Debug <off>"
 			debugOverlay.Visible = false
 			if debugConnection then safeDisconnect(debugConnection); debugConnection = nil end
 		end
@@ -3216,7 +3360,7 @@ end)
     shiftLockToggle.MouseButton1Click:Connect(function()
         shiftLockAtivo = not shiftLockAtivo
         local base = "🔒 Shift Lock"
-        shiftLockToggle.Text = base .. (shiftLockAtivo and " [ON]" or " [OFF]")
+        shiftLockToggle.Text = base .. (shiftLockAtivo and " <on>" or " <off>")
         setToggleColor(shiftLockToggle, shiftLockAtivo)
 
         local char = player.Character
@@ -3418,7 +3562,7 @@ end
 -- Botão
 shadersToggle.MouseButton1Click:Connect(function()
 	bestLightAtivo = not bestLightAtivo
-	shadersToggle.Text = "Best Light" .. (bestLightAtivo and " [ON]" or " [OFF]")
+	shadersToggle.Text = "Best Light" .. (bestLightAtivo and " <on>" or " <off>")
 	setToggleColor(shadersToggle, bestLightAtivo)
 
 	if bestLightAtivo then
