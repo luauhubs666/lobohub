@@ -283,7 +283,7 @@ local function iniciarHub()
 
 	local criadoresLabel = Instance.new("TextLabel")
 	criadoresLabel.Size = UDim2.new(1, -10, 0, 35)
-	criadoresLabel.Text = "Dev: Eu criei esse script kk"
+	criadoresLabel.Text = "Dev: luauhubs666"
 	criadoresLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 	criadoresLabel.BackgroundTransparency = 1
 	criadoresLabel.Font = Enum.Font.SourceSansItalic
