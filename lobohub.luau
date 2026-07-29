@@ -283,7 +283,7 @@ local function iniciarHub()
 
 	local criadoresLabel = Instance.new("TextLabel")
 	criadoresLabel.Size = UDim2.new(1, -10, 0, 35)
-	criadoresLabel.Text = "Dev: Ice - Elementar"
+	criadoresLabel.Text = "Dev: Eu criei esse script kk"
 	criadoresLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 	criadoresLabel.BackgroundTransparency = 1
 	criadoresLabel.Font = Enum.Font.SourceSansItalic
@@ -302,7 +302,7 @@ local function iniciarHub()
 	discordButton.LayoutOrder = 6
 	discordButton.Parent = pageBemVindo
 	trackGui(discordButton)
-
+https://discord.gg/deltax
 	-- Página Player
 	local pagePlayer = Instance.new("ScrollingFrame")
 	pagePlayer.Name = "Page_Player"
