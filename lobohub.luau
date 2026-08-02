@@ -283,7 +283,7 @@ local function iniciarHub()
 
 	local criadoresLabel = Instance.new("TextLabel")
 	criadoresLabel.Size = UDim2.new(1, -10, 0, 35)
-	criadoresLabel.Text = "Dev: luauhubs666"
+	criadoresLabel.Text = "Dev: KauaRodrigues"
 	criadoresLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 	criadoresLabel.BackgroundTransparency = 1
 	criadoresLabel.Font = Enum.Font.SourceSansItalic
@@ -302,7 +302,7 @@ local function iniciarHub()
 	discordButton.LayoutOrder = 6
 	discordButton.Parent = pageBemVindo
 	trackGui(discordButton)
-https://discord.gg/deltax
+
 	-- Página Player
 	local pagePlayer = Instance.new("ScrollingFrame")
 	pagePlayer.Name = "Page_Player"
@@ -445,84 +445,75 @@ https://discord.gg/deltax
     local BuracoNegroBodyToggle = makeFuncButton(pagePlayer,"🌪 BlackHole (InMe)", Color3.fromRGB(30, 30, 30))
     local puxarPartsToggle = makeFuncButton(pagePlayer,"🌪 BlackHole (Alvo)", Color3.fromRGB(30, 30, 30))
     local AntiSitToggle = makeFuncButton(pageProtecoes,"🪑🚫 AntiSit <off>", Color3.fromRGB(30, 30, 30))
-    local PerformanceToggle = makeFuncButton(pageClient," 🔧 Otimizar <tap>", Color3.fromRGB(30, 30, 30))
-    -- Variável para evitar que o jogador clique várias vezes e trave o jogo
+local PerformanceToggle = makeFuncButton(pageClient, " 🔧 Otimizar <tap>", Color3.fromRGB(30, 30, 30))
+
 local jaOtimizado = false 
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local Terrain = workspace:FindFirstChildOfClass("Terrain")
 
 local function OtimizarJogoExtremo()
     if jaOtimizado then return end
     jaOtimizado = true
 
-    print("Iniciando Otimização Extrema...")
+    print("Iniciando Otimização Real...")
 
-    -- 1. Otimização do Lighting (Iluminação)
-    game.Lighting.GlobalShadows = false
-    game.Lighting.FogEnd = 9e9
-    game.Lighting.ShadowSoftness = 0
+    -- 1. Força a qualidade gráfica nativa para o mínimo possível
+    pcall(function()
+        UserSettings():GetService("UserGameSettings").SavedQualityLevel = Enum.SavedQualityLevel.QualityLevel1
+    end)
+
+    -- 2. Otimização do Lighting (Iluminação)
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+    Lighting.ShadowSoftness = 0
+    Lighting.Brightness = 1
     
-    -- Desativa todos os efeitos de pós-processamento (Blur, Bloom, SunRays, etc)
-    for _, effect in ipairs(game.Lighting:GetDescendants()) do
+    -- Desativa efeitos de pós-processamento
+    for _, effect in ipairs(Lighting:GetDescendants()) do
         if effect:IsA("PostEffect") or effect:IsA("BlurEffect") or effect:IsA("SunRaysEffect") or effect:IsA("ColorCorrectionEffect") or effect:IsA("BloomEffect") or effect:IsA("DepthOfFieldEffect") then
             effect.Enabled = false
         end
     end
 
-    -- 2. Otimização do Terreno (Água)
-    local terrain = workspace:FindFirstChildOfClass("Terrain")
-    if terrain then
-        terrain.WaterWaveSize = 0
-        terrain.WaterWaveSpeed = 0
-        terrain.WaterReflectance = 0
-        terrain.WaterTransparency = 0
-        pcall(function() terrain.Decoration = false end) -- Desativa grama realista
+    -- 3. Otimização do Terreno
+    if Terrain then
+        Terrain.WaterWaveSize = 0
+        Terrain.WaterWaveSpeed = 0
+        Terrain.WaterReflectance = 0
+        Terrain.WaterTransparency = 0
+        pcall(function() Terrain.Decoration = false end)
     end
 
-    -- 3. Otimização do Workspace (Peças, Texturas e Partículas)
-    local descendants = workspace:GetDescendants()
-    
-    for i, obj in ipairs(descendants) do
-        -- Altera peças para o material mais leve e desativa sombras/reflexos
-        if obj:IsA("BasePart") then
-            obj.Material = Enum.Material.SmoothPlastic
-            obj.CastShadow = false
-            obj.Reflectance = 0
-        end
+    -- 4. Otimização do Workspace (Sem travar o jogo)
+    -- Usamos coroutines para rodar a varredura em segundo plano sem congelar a tela
+    task.spawn(function()
+        local descendants = workspace:GetDescendants()
+        local count = 0
 
-        -- Desativa partículas e efeitos visuais
-        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
-            obj.Enabled = false
-        end
+        for _, obj in ipairs(descendants) do
+            count = count + 1
 
-        -- Oculta texturas e decalques (Extremo)
-        if obj:IsA("Decal") or obj:IsA("Texture") then
-            obj.Transparency = 1
-        end
+            if obj:IsA("BasePart") and not obj:IsA("Terrain") then
+                obj.Material = Enum.Material.SmoothPlastic
+                obj.CastShadow = false
+                obj.Reflectance = 0
+            elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
+                obj.Enabled = false
+            end
 
-        -- Sistema de segurança: Pausa minimamente a cada 500 objetos
-        if i % 500 == 0 then
-            task.wait()
+            -- Pausa inteligente a cada 800 objetos sincronizada com os quadros do jogo
+            if count % 800 == 0 then
+                RunService.RenderStepped:Wait()
+            end
         end
-    end
-
-    -- 4. Otimização Contínua (Para objetos que carregam depois)
-    workspace.DescendantAdded:Connect(function(obj)
-        if obj:IsA("BasePart") then
-            obj.Material = Enum.Material.SmoothPlastic
-            obj.CastShadow = false
-            obj.Reflectance = 0
-        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
-            obj.Enabled = false
-        elseif obj:IsA("Decal") or obj:IsA("Texture") then
-            obj.Transparency = 1
-        end
+        print("Otimização Extrema Concluída com Sucesso!")
     end)
-    
-    print("Otimização Extrema Concluída!")
 end
 
--- Conecta a função de otimização ao seu botão já existente
--- Nota: Caso a sua biblioteca de UI exija outro método de clique (como .OnFire ou .Callback), basta trocar o "MouseButton1Click" abaixo.
+-- Conecta a função ao botão
 PerformanceToggle.MouseButton1Click:Connect(OtimizarJogoExtremo)
+
 
 	local dynamicShadowsToggle = makeFuncButton(pageClient, "Shadows <on>", Color3.fromRGB(30, 30, 30))
 	local shadersToggle = makeFuncButton(pageClient, "Best Light <off>", Color3.fromRGB(30, 30, 30))
